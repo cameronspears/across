@@ -1,6 +1,6 @@
 # Across
 
-P2P browser file transfer, live at https://acrossfile.com (Vercel project `cameronspears-projects/file-transfer`; the old file-transfer-tan-alpha.vercel.app still serves it). README.md explains how it works; decisions.tsv logs past design decisions, so add a row for new ones.
+P2P browser file transfer, live at https://acrossfile.com (Vercel project `cameronspears-projects/across`; the old file-transfer-tan-alpha.vercel.app still serves it). README.md explains how it works; decisions.tsv logs past design decisions, so add a row for new ones.
 
 ## Layout
 - `public/index.html`: the whole UI (HTML, CSS, JS in one file).

@@ -627,6 +627,18 @@ function track(e, p = {}) {
     navigator.sendBeacon('api/event', JSON.stringify({ e, p: { ...p, s: SID, page: '/' } }));
   } catch {}
 }
+// Vercel Web Analytics and Speed Insights (page views and load speed), on the live site only and under
+// the same opt-outs. Each report carries the page's path alone, never the #secret or ?query.
+if (!statsOff() && location.hostname === 'acrossfile.com') {
+  for (const [q, dir] of [['va', 'insights'], ['si', 'speed-insights']]) {
+    window[q] = (...a) => (window[q + 'q'] ||= []).push(a);
+    window[q]('beforeSend', (e) => ({ ...e, url: e.url.split(/[?#]/)[0] }));
+    const s = document.createElement('script');
+    s.src = `/_vercel/${dir}/script.js`;
+    s.defer = true;
+    document.head.append(s);
+  }
+}
 
 // the kind of file from its extension, and the extension only when it is a common one
 const KINDS = {

@@ -116,7 +116,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 
 <h2>What we don’t do</h2>
 <ul>
-<li>No accounts, no ads, no cookies, and no third-party scripts. The page saves only your Hide my IP setting (and your choice to turn off usage stats, if you make it). To receive a file it also installs a small helper (a service worker) that streams the file into your downloads. The helper stores nothing.</li>
+<li>No accounts, no ads, no cookies, and no third-party scripts beyond Vercel’s page-view and speed counters, served from this site. The page saves only your Hide my IP setting (and your choice to turn off usage stats, if you make it). To receive a file it also installs a small helper (a service worker) that streams the file into your downloads. The helper stores nothing.</li>
 <li>We count how Across is used (for example how many transfers finish, how big they are, and whether they went through the relay), never what is in them or who sent them. <a href="privacy">Here is exactly what we collect</a>, and how to turn it off.</li>
 <li>No file storage. There’s nowhere on our side to put one.</li>
 <li>The page’s security policy (CSP) stops it loading code from anywhere else, or sending data to any website but this one. The only other outside connections are the WebRTC ones described above.</li>
@@ -144,6 +144,18 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 (() => {
   try {
     if (localStorage.getItem('no-stats') === '1' || navigator.globalPrivacyControl === true || navigator.doNotTrack === '1') return;
+    // Vercel Web Analytics and Speed Insights (page views and load speed), on the live site only and under
+    // the same opt-outs. Each report carries the page's path alone, never the #secret or ?query.
+    if (location.hostname === 'acrossfile.com') {
+      for (const [q, dir] of [['va', 'insights'], ['si', 'speed-insights']]) {
+        window[q] = (...a) => (window[q + 'q'] ||= []).push(a);
+        window[q]('beforeSend', (e) => ({ ...e, url: e.url.split(/[?#]/)[0] }));
+        const s = document.createElement('script');
+        s.src = `/_vercel/${dir}/script.js`;
+        s.defer = true;
+        document.head.append(s);
+      }
+    }
     const b = crypto.getRandomValues(new Uint8Array(16));
     for (let i = 5, t = Date.now(); i >= 0; i--, t = Math.floor(t / 256)) b[i] = t % 256;
     b[6] = (b[6] & 15) | 0x70;
