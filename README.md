@@ -218,6 +218,16 @@ The guard can't stop everything:
 - Cloudflare's usage numbers arrive with some delay, and the guard reads them once a minute. The default budget of 900 GB leaves 100 GB for that delay and for the 5 minutes the unknown state waits.
 - It counts TURN traffic only. If the same Cloudflare account uses the SFU, lower `RELAY_BUDGET_GB` by that amount, or use a separate account for this app.
 
+## Usage stats
+
+The page counts how it is used: page views, files picked, connections, and transfers started, finished or failed, with sizes rounded to two figures, the file's kind, how it connected (same network, direct or relay), how long it took and why it failed. It never sends a file name, link, code or address. `public/privacy.html` lists everything for the people using it.
+
+- The page posts each event to `/api/event` with `navigator.sendBeacon`. No third-party script loads, so the CSP is unchanged: the browser only ever talks to this site.
+- `api/event.js` checks every field against a fixed list per event, with types and ranges, and drops the whole event if anything is off. A changed page still can't send a name or a link through it.
+- It adds country (from Vercel's `x-vercel-ip-country`), coarse browser, OS and device type, and a visitor id: a hash of the client's network and user agent with a salt that changes daily, kept in Redis for two days. That counts people per day without cookies and can't link days. Each page load also makes a random session id, kept only in memory.
+- It forwards to PostHog as personless events (`$process_person_profile: false`) with GeoIP off, so PostHog never sees the visitor's address. Bots, Global Privacy Control and Do Not Track send nothing. The privacy page has a switch that turns stats off for that browser.
+- Without `POSTHOG_KEY` the endpoint accepts and drops events, as on a local machine. `test/event.mjs` checks the filter; `test/stats-e2e.mjs` runs a transfer against a capture stub and checks every event arrives and none carries the name or link.
+
 ## Configuration
 
 | Variable | Read by | Meaning |
@@ -231,6 +241,9 @@ The guard can't stop everything:
 | `RELAY_BUDGET_GB` | `api/ice.js`, `api/guard.js` | Relay traffic over the last 31 days, in GB of 10^9 bytes, at which the guard stops. The default is 900, and the most it accepts is 1000, the free allowance. `0` keeps the relay closed. A value above 1000, or one that isn't a number of at least 0, logs an error and uses 900. |
 | `RELAY_DAILY_GB` | `api/ice.js`, `api/guard.js` | Relay traffic in one UTC day at which the guard stops until the next day, so someone burning traffic on purpose costs a day of the relay, not the month. The default is 60, the most it accepts is 1000. |
 | `RELAY_MINTS_PER_HOUR` | `api/ice.js` | Credentials one client can get per hour. The default is 20. A value that isn't a number of at least 0 logs an error and uses 20. |
+| `POSTHOG_KEY` | `api/event.js` | PostHog project API key (`phc_…`). Unset turns usage stats off. |
+| `POSTHOG_HOST` | `api/event.js` | PostHog ingestion host. The default is `https://us.i.posthog.com`. |
+| `EVENTS_PER_MIN` | `api/event.js` | Usage events one client can send a minute. The default is 120. |
 | `SIGNAL_POSTS_PER_MIN`, `SIGNAL_POLLS_PER_MIN` | `api/signal.js` | Handshake posts and polls one client can make per minute. The defaults are 180 each. `test/servers.sh` raises them, since every local test comes from one address. |
 | `RELAY` | `api/ice.js`, `api/guard.js` | `cloudflare`, `coturn`, or `none`. Without it, the relay is `cloudflare` when `TURN_KEY_ID` is set and `none` otherwise. |
 | `TURN_SECRET`, `TURN_URL` | `api/ice.js` | With `RELAY=coturn`, the coturn shared secret and a comma-separated list of TURN URLs. coturn credentials can't be revoked and have no budget. |

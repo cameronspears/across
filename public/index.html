@@ -5,12 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#fafafa">
-<title>Across</title>
-<meta name="description" content="Send a file straight from your browser to theirs. Encrypted end to end, no size limit, no account, nothing stored on a server.">
-<meta property="og:title" content="Across">
-<meta property="og:description" content="Send a file straight from your browser to theirs. Encrypted, no account, nothing stored.">
-<meta property="og:url" content="https://acrossfile.com">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='19' height='19' rx='6' fill='%23fff'/%3E%3Cpath d='M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3'/%3E%3C/svg%3E">
+<title>Across: send large files free, no size limit, no signup</title>
+<meta name="description" content="Send large files straight from your browser to theirs. Free, end-to-end encrypted and peer-to-peer, with no size limit, no account, and nothing stored on a server.">
+<link rel="canonical" href="https://acrossfile.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Across">
+<meta property="og:title" content="Across: send large files, browser to browser">
+<meta property="og:description" content="Free, end-to-end encrypted, no size limit, no account. Your file goes straight to theirs and is never stored on a server.">
+<meta property="og:url" content="https://acrossfile.com/">
+<meta property="og:image" content="https://acrossfile.com/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Across logo. Send large files straight from your browser to theirs. Free, encrypted, no account, no size limit.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23111'/%3E%3Ccircle cx='8.5' cy='16' r='3.5' fill='%23fff'/%3E%3Cpath d='M13.5 16h10m-5-5 5 5-5 5' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="manifest" href="/site.webmanifest">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"WebSite","@id":"https://acrossfile.com/#website","url":"https://acrossfile.com/","name":"Across","publisher":{"@id":"https://acrossfile.com/#org"}},
+{"@type":"Organization","@id":"https://acrossfile.com/#org","name":"Across","url":"https://acrossfile.com/","logo":"https://acrossfile.com/icon-512.png","sameAs":["https://github.com/cameronspears/across"]},
+{"@type":"WebApplication","name":"Across","url":"https://acrossfile.com/","description":"Send large files straight from your browser to theirs. Free, end-to-end encrypted and peer-to-peer, with no size limit, no account, and nothing stored on a server.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires a current browser with WebRTC, such as Chrome, Edge, Firefox or Safari.","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"image":"https://acrossfile.com/og.png","publisher":{"@id":"https://acrossfile.com/#org"}}
+]}
+</script>
 <style>
 :root{
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
@@ -281,7 +298,7 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 
 <header class="bar">
 <div class="wrap">
-<a class="mark" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="6"/><path d="M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3" stroke-width="1.6"/></svg>Across</a>
+<a class="mark" href="./"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><circle cx="8.5" cy="16" r="3.5" fill="#fff"/><path d="M13.5 16h10m-5-5 5 5-5 5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Across</a>
 <small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg><span>Encrypted, browser to browser</span></small>
 </div>
 </header>
@@ -346,7 +363,7 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 <div id="privacy" hidden><label class="pref" for="hide"><span><b>Hide my IP address</b><small id="hide-note"></small></span><input type="checkbox" id="hide" role="switch"></label></div>
 </main>
 
-<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><span>No account. No tracking. <a href="how">How it works</a></span></div></footer>
+<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><span>No account. No cookies. <a href="how">How it works</a> · <a href="privacy">Privacy</a></span></div></footer>
 <script>
 'use strict';
 const STUN = ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'];
@@ -569,6 +586,75 @@ note.text = () => ($('#hide-note').textContent = hide
 
 let hide = true;
 try { hide = localStorage.getItem('hide-ip') !== '0'; } catch {}
+
+// ================= usage stats =================
+// Anonymous counts of how Across is used, posted to /api/event, which checks every field against a fixed
+// list and passes them to PostHog. Never a file name, link, code or address: see /privacy. Nothing is
+// sent with Global Privacy Control, Do Not Track, or the switch on the privacy page.
+const SID = (() => {
+  // a UUIDv7 for this tab only, so PostHog can group one visit's events; it is never stored
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  for (let i = 5, t = Date.now(); i >= 0; i--, t = Math.floor(t / 256)) b[i] = t % 256;
+  b[6] = (b[6] & 15) | 0x70;
+  b[8] = (b[8] & 63) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+})();
+function statsOff() {
+  try {
+    if (localStorage.getItem('no-stats') === '1') return true;
+  } catch {}
+  return navigator.globalPrivacyControl === true || navigator.doNotTrack === '1';
+}
+function track(e, p = {}) {
+  if (statsOff()) return;
+  try {
+    navigator.sendBeacon('api/event', JSON.stringify({ e, p: { ...p, s: SID, page: '/' } }));
+  } catch {}
+}
+
+// the kind of file from its extension, and the extension only when it is a common one
+const KINDS = {
+  image: 'jpg jpeg png gif webp heic heif avif bmp tif tiff svg dng cr2 nef arw',
+  video: 'mp4 mov m4v mkv webm avi wmv 3gp',
+  audio: 'mp3 m4a wav flac aac ogg opus aiff',
+  document: 'pdf doc docx xls xlsx ppt pptx key pages numbers txt rtf odt ods csv md epub',
+  archive: 'zip rar 7z tar gz tgz bz2 xz dmg iso',
+  code: 'json js ts py html css xml yml yaml sql sh log',
+  app: 'exe msi apk ipa pkg deb rpm appimage',
+};
+function kindOf(name) {
+  const ext = /\.([^.]+)$/.exec(name)?.[1].toLowerCase();
+  const kind = Object.keys(KINDS).find((k) => KINDS[k].split(' ').includes(ext));
+  return kind ? { kind, ext } : { kind: 'other' };
+}
+
+// how a connection reached the other side: same network, straight across the internet, or through the relay
+async function routeOf(pc) {
+  try {
+    const stats = await pc.getStats();
+    let pair;
+    stats.forEach((s) => {
+      if (s.type === 'transport' && s.selectedCandidatePairId) pair = stats.get(s.selectedCandidatePairId);
+    });
+    stats.forEach((s) => {
+      if (s.type === 'candidate-pair' && (s.selected || (s.nominated && s.state === 'succeeded'))) pair ??= s;
+    });
+    const local = pair && stats.get(pair.localCandidateId), remote = pair && stats.get(pair.remoteCandidateId);
+    if (!local) return 'unknown';
+    if (local.candidateType === 'relay' || remote?.candidateType === 'relay') return 'relay';
+    return local.candidateType === 'host' && remote?.candidateType === 'host' ? 'lan' : 'direct';
+  } catch {
+    return 'unknown';
+  }
+}
+
+// what went wrong, from the words the page showed
+const REASONS = [[/disconnected/, 'disconnected'], [/Could not connect/, 'no_connect'], [/without showing your IP/, 'relay_down'],
+  [/unexpected|more than/, 'bad_data'], [/Could not save/, 'save_error'], [/stopped at/, 'incomplete'], [/Cancelled/, 'cancelled'],
+  [/Could not reach the sender/, 'no_sender'], [/reach Across/, 'offline'], [/verify/, 'unverified'], [/code/i, 'code']];
+const reasonOf = (text) => REASONS.find(([r]) => r.test(text))?.[1] ?? 'other';
+const mbps = (bytes, ms) => (ms > 0 ? Math.round((bytes * 8) / ms / 10) / 100 : 0);
 
 function privacyBox(onChange) {
   const box = $('#hide');
@@ -977,11 +1063,12 @@ function pickFile() {
   $('#pick').hidden = false;
   $('.drop').after($('#msg'));
   privacyBox(() => {});
-  $('#file').onchange = (e) => e.target.files[0] && send(e.target.files[0]);
+  $('#file').onchange = (e) => e.target.files[0] && send(e.target.files[0], 'button');
   // a typed code goes in the address, so a reload tries it again
   const code = $('#code');
   const go = () => {
     const c = code.value.toLowerCase().replace(/[\s-]/g, '');
+    track('code_entered', { valid: CODE.test(c) });
     if (CODE.test(c)) return (location.hash = c);
     $('#code-msg').textContent = c.length !== 6 ? 'A code has 6 letters.'
       : 'Codes use only consonants, never vowels, digits or L. Check the letters.';
@@ -1004,14 +1091,18 @@ function pickFile() {
     lift(false);
     if ($('#pick').hidden) return;
     const items = [...e.dataTransfer.items].filter((i) => i.kind === 'file');
+    if (items.length > 1) track('file_refused', { reason: 'several' });
     if (items.length > 1) return say('One file at a time. To send several, zip them into one file first.', 'error');
     // a dropped folder arrives as a file that can't be read
+    if (items[0]?.webkitGetAsEntry?.()?.isDirectory) track('file_refused', { reason: 'folder' });
     if (items[0]?.webkitGetAsEntry?.()?.isDirectory) return say("Folders can't be sent. Zip the folder into one file first.", 'error');
-    if (e.dataTransfer.files[0]) send(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files[0]) send(e.dataTransfer.files[0], 'drop');
   });
 }
 
-async function send(file) {
+async function send(file, how) {
+  const kind = kindOf(file.name);
+  track('file_picked', { size: file.size, ...kind, how, hide_ip: hide });
   $('#pick').hidden = true;
   $('#send').hidden = false;
   $('#send .card').append($('#msg'));
@@ -1031,6 +1122,7 @@ async function send(file) {
   let copied;
   $('#copy').onclick = async () => {
     const ok = await copy(box);
+    track('link_copied', { ok });
     if (ok) $('#copy').focus(); // copying selected the field; keyboard users stay on the button
     $('#copied').textContent = ok ? 'Copied.'
       : matchMedia('(pointer: coarse)').matches ? 'Copying was blocked. Touch and hold the link in the box, then choose Copy.'
@@ -1046,7 +1138,7 @@ async function send(file) {
   };
   if (navigator.share) {
     $('#share').hidden = false;
-    $('#share').onclick = () => navigator.share({ url: link }).catch((err) =>
+    $('#share').onclick = () => track('link_shared') || navigator.share({ url: link }).catch((err) =>
       err.name !== 'AbortError' && ($('#copied').textContent = "Sharing didn't work here. Use Copy instead."));
   }
   const code = qr(link);
@@ -1109,6 +1201,7 @@ async function send(file) {
       let misses = 0;
       missed = () => {
         if (++misses < CODE_TRIES) return;
+        track('code_rejected', { reason: 'too_many' });
         end();
         $('#code-box').replaceChildren(Object.assign(document.createElement('p'), {
           textContent: 'Someone typed a wrong code too many times, so it stopped working. Send the link instead.',
@@ -1118,6 +1211,7 @@ async function send(file) {
       $('#code-out').textContent = spaced(code);
       $('#code-out').ariaLabel = code.toUpperCase().split('').join(' ');
       $('#code-box').hidden = false;
+      track('code_offered');
       $('label[for=link]').textContent = 'Or send them this link';
       return;
     }
@@ -1159,8 +1253,14 @@ async function send(file) {
   async function connect(id, sig, pass) {
     const p = { id, sig, pass, state: 'offering' };
     peers.set(id, p);
+    const via = pass.code ? 'code' : 'link', t0 = performance.now();
+    let route = 'unknown', began, reported = false;
+    const end = (e, props) => reported || ((reported = true), track(e, { role: 'sender', ...props }));
     p.timer = setTimeout(() => {
-      if (p.local && p.state !== 'verified') say(RELAY_DOWN(), 'error');
+      if (p.local && p.state !== 'verified') {
+        say(RELAY_DOWN(), 'error');
+        track('relay_unavailable', { role: 'sender' });
+      }
       drop(p);
     }, PROVE_MS);
     const config = await rtcConfig(hide);
@@ -1194,7 +1294,10 @@ async function send(file) {
         }
         drop(p);
         if (!row || finished) return;
-        if (started) return row.label('Disconnected.', 'stop');
+        if (started) {
+          end('transfer_failed', { stage: 'sending', reason: 'disconnected', size: file.size });
+          return row.label('Disconnected.', 'stop');
+        }
         // they left before pressing Download, or reconnected to change their privacy setting
         row.remove();
         status();
@@ -1215,6 +1318,7 @@ async function send(file) {
       row.label('Connected. Waiting for them to press Download.');
       row.set(0, file.size);
       dc.send(JSON.stringify({ t: 'meta', name: file.name, size: file.size }));
+      routeOf(conn).then((r) => track('connected', { role: 'sender', via, route: (route = r), ms: performance.now() - t0, hide_ip: hide }));
     }
 
     async function onControl(m, conn, ch, hs) {
@@ -1231,6 +1335,8 @@ async function send(file) {
         setTimeout(() => choose(conn, ch), LAN_GRACE_MS);
       } else if (m.t === 'start' && !started) {
         started = true;
+        began = performance.now();
+        track('transfer_started', { role: 'sender', size: file.size, ...kind, zip: !!m.z });
         row.label('Sending', 'live');
         // progress is measured here, not reported back: traffic flowing the
         // other way mid-transfer makes Chrome's data channels stall for ~20s
@@ -1239,11 +1345,13 @@ async function send(file) {
         const shown = () => Math.min(file.size, Math.max(0, sent.n - dc.bufferedAmount * sent.scale));
         const tick = setInterval(() => !finished && row.set(shown(), file.size), 300);
         pump(dc, file, Math.min(CHUNK, pc.sctp?.maxMessageSize || CHUNK), sent, m.z)
-          .catch(() => !finished && row.label('Stopped.', 'stop'))
+          .catch(() => !finished && (end('transfer_failed', { stage: 'sending', reason: 'stopped', size: file.size }), row.label('Stopped.', 'stop')))
           .finally(() => !finished && clearInterval(tick));
         dc.addEventListener('close', () => clearInterval(tick));
       } else if (m.t === 'got') {
         finished = true;
+        const took = performance.now() - (began ?? t0);
+        end('transfer_completed', { via, route, size: file.size, ms: took, mbps: mbps(file.size, took) });
         stayAwake(false); // the usual case is one receiver; a later one still connects, only the screen may sleep
         row.label('Received.', 'done');
         row.set(file.size, file.size);
@@ -1252,6 +1360,7 @@ async function send(file) {
         $('#again').hidden = false;
       } else if (m.t === 'cancel') {
         finished = true;
+        end('transfer_failed', { stage: 'sending', reason: 'cancelled', size: file.size });
         row.label('Cancelled by the receiver.', 'stop');
       }
     }
@@ -1262,6 +1371,7 @@ async function send(file) {
         // hidden, no relay, and no .local names to offer either
         p.pc.close();
         p.state = 'blocked';
+        track('relay_unavailable', { role: 'sender' });
         return say(RELAY_DOWN(), 'error');
       }
       if (!lan && p.lan) {
@@ -1444,6 +1554,8 @@ async function receive(pass) {
   // got counts file bytes written; arrived counts file bytes received or announced, for the size check.
   // zin collects a compressed block's bytes; writes keeps every write, inflated or not, in file order.
   let arrived = 0, zin = null, writes = Promise.resolve();
+  const via = pass.code ? 'code' : 'link', t0 = performance.now();
+  let route = 'unknown', began;
   const slow = setTimeout(() => !meta && phase !== 'failed' && phase !== 'blocked' &&
     say(config === LAN ? `Looking for the sender. ${relayNote()} Until then, hidden mode works only on the same Wi-Fi; ` +
       'turning off Hide my IP address connects from anywhere.'
@@ -1464,6 +1576,7 @@ async function receive(pass) {
   }
 
   function wrongCode(text) {
+    track('code_rejected', { reason: /too old/.test(text) ? 'old_browser' : /No file/.test(text) ? 'unknown' : 'wrong' });
     reject(text);
     $('#r-name').textContent = "That code didn't work";
     $('#r-size').textContent = spaced(pass.code);
@@ -1501,6 +1614,7 @@ async function receive(pass) {
   function block() {
     hangUp();
     phase = 'blocked';
+    track('relay_unavailable', { role: 'receiver' });
     say(RELAY_DOWN(), 'error');
   }
 
@@ -1510,6 +1624,10 @@ async function receive(pass) {
   }
 
   function fail(text) {
+    const reason = reasonOf(text);
+    if (phase !== 'failed' && reason !== 'code') {
+      track('transfer_failed', { role: 'receiver', stage: phase, reason, at: got, ...(meta && { size: meta.size }) });
+    }
     phase = 'failed';
     stayAwake(false);
     clearInterval(hello);
@@ -1690,6 +1808,7 @@ async function receive(pass) {
       clearTimeout(slow);
       meta = m;
       phase = 'ready';
+      routeOf(link.conn).then((r) => track('connected', { role: 'receiver', via, route: (route = r), ms: performance.now() - t0, hide_ip: hide }));
       say('');
       $('#r-card').classList.remove('waiting');
       named($('#r-name'), meta.name);
@@ -1706,6 +1825,8 @@ async function receive(pass) {
       if (zin || got !== meta.size) return reject(`The transfer stopped at ${size(got)} of ${size(meta.size)}.`);
       const blob = await sink.close();
       phase = 'done';
+      const took = performance.now() - began;
+      track('transfer_completed', { role: 'receiver', via, route, size: meta.size, ms: took, mbps: mbps(meta.size, took), saved: blob ? 'download' : 'disk' });
       stayAwake(false);
       $('#r-note').textContent = '';
       xfer.label('Received.', 'done');
@@ -1753,6 +1874,9 @@ async function receive(pass) {
     if (phase !== 'saving') return opened.abort(); // the sender left while the picker was open
     sink = opened;
     phase = 'receiving';
+    began = performance.now();
+    const zip = ZIP && new URLSearchParams(location.search).get('zip') !== '0';
+    sinkMode().then(({ mode }) => track('transfer_started', { role: 'receiver', size: meta.size, ...kindOf(meta.name), sink: mode, zip }));
     stayAwake(true);
     $('#go').hidden = true;
     xfer = view($('#r-xfer'));
@@ -1760,7 +1884,7 @@ async function receive(pass) {
     xfer.focus(); // Download is gone, so focus moves to what replaced it
     xfer.set(0, meta.size);
     // ?zip=0 turns compression off, to compare against it
-    dc.send(JSON.stringify(!ZIP || new URLSearchParams(location.search).get('zip') === '0' ? { t: 'start' } : { t: 'start', z: 1 }));
+    dc.send(JSON.stringify(zip ? { t: 'start', z: 1 } : { t: 'start' }));
     // progress counts bytes as they arrive, a compressed block's in proportion, so a slow block doesn't freeze the bar
     const seen = () => Math.min(meta.size, zin ? arrived - zin.raw * (zin.left / zin.n) : arrived);
     timer = setInterval(() => xfer.set(seen(), meta.size), 300);
@@ -1785,6 +1909,24 @@ addEventListener('drop', (e) => e.preventDefault());
 addEventListener('pageshow', (e) => e.persisted && location.reload());
 const hash = location.hash.slice(1);
 const secret = hash.toLowerCase().replace(/[^a-z0-9]+$/, '');
+{
+  // where the visit came from: another site's name and campaign tags only, never the part after #
+  const q = new URLSearchParams(location.search), utm = {};
+  for (const k of ['utm_source', 'utm_medium', 'utm_campaign']) if (/^[\w.-]{1,40}$/.test(q.get(k) ?? '')) utm[k] = q.get(k);
+  let ref;
+  try {
+    ref = new URL(document.referrer).hostname;
+  } catch {}
+  track('$pageview', {
+    entry: /^[a-z0-9]{20}$/.test(secret) ? 'link' : CODE.test(secret) ? 'code' : hash ? 'bad' : 'home',
+    ...(ref && ref !== location.hostname && /^[a-z0-9.-]{1,80}$/.test(ref) && { ref }),
+    ...utm,
+    ...(/^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(navigator.language) && { lang: navigator.language }),
+    vw: innerWidth,
+  });
+  let errors = 0;
+  addEventListener('error', (e) => errors++ < 3 && track('js_error', { msg: String(e.message).replace(/\s+/g, ' ').slice(0, 160) || 'error', line: e.lineno || 0 }));
+}
 if (!window.isSecureContext) say('This page needs HTTPS.');
 else if (/^[a-z0-9]{20}$/.test(secret)) receive({ secret });
 else if (CODE.test(secret)) receive({ code: secret });

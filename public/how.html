@@ -5,12 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#fafafa">
-<title>How Across works</title>
-<meta name="description" content="What happens to your file, who can see what, and how to check it yourself.">
+<title>How Across works: encrypted peer-to-peer file transfer</title>
+<meta name="description" content="What happens to a file you send with Across: how end-to-end encryption and the hidden IP relay work, who can see what, and how to check it yourself.">
+<link rel="canonical" href="https://acrossfile.com/how">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Across">
 <meta property="og:title" content="How Across works">
 <meta property="og:description" content="What happens to your file, who can see what, and how to check it yourself.">
 <meta property="og:url" content="https://acrossfile.com/how">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='19' height='19' rx='6'/%3E%3Cpath d='M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3'/%3E%3C/svg%3E">
+<meta property="og:image" content="https://acrossfile.com/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Across logo. Send large files straight from your browser to theirs. Free, encrypted, no account, no size limit.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23111'/%3E%3Ccircle cx='8.5' cy='16' r='3.5' fill='%23fff'/%3E%3Cpath d='M13.5 16h10m-5-5 5 5-5 5' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="manifest" href="/site.webmanifest">
 <style>
 :root{
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
@@ -62,7 +72,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 <body>
 <header class="bar">
 <div class="wrap">
-<a class="mark" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="6"/><path d="M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3" stroke-width="1.6"/></svg>Across</a>
+<a class="mark" href="./"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor"/><circle cx="8.5" cy="16" r="3.5" fill="#fff"/><path d="M13.5 16h10m-5-5 5 5-5 5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Across</a>
 <a class="cta" href="./">Send a file</a>
 </div>
 </header>
@@ -92,6 +102,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 <tbody>
 <tr><th scope="row">The person you send to</th><td>Yes</td><td>Yes</td><td>Only if you turn off <b>Hide my IP address</b></td></tr>
 <tr><th scope="row">Our server (on Vercel)</th><td class="no">No</td><td class="no">No, only its hash</td><td>Yes, as every website does. Our database stores only a salted hash of it, for rate limits, and the salt changes daily.</td></tr>
+<tr><th scope="row">Our usage stats (PostHog)</th><td class="no">No, only its size, rounded, and its kind, like “video”</td><td class="no">No</td><td class="no">No, only your country</td></tr>
 <tr><th scope="row">The relay (Cloudflare)</th><td class="no">No, only encrypted bytes</td><td class="no">No</td><td>Yes, when it carries your transfer</td></tr>
 <tr><th scope="row">Anyone else on the network</th><td class="no">No, it’s encrypted</td><td class="no">No</td><td>They see that you connected, like any traffic</td></tr>
 </tbody>
@@ -105,7 +116,8 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 
 <h2>What we don’t do</h2>
 <ul>
-<li>No accounts, no ads, no analytics, no cookies, and no third-party scripts. The only thing the page saves on your device is your Hide my IP setting.</li>
+<li>No accounts, no ads, no cookies, and no third-party scripts. The only thing the page saves on your device is your Hide my IP setting (and your choice to turn off usage stats, if you make it).</li>
+<li>We count how Across is used (for example how many transfers finish, how big they are, and whether they went through the relay), never what is in them or who sent them. <a href="privacy">Here is exactly what we collect</a>, and how to turn it off.</li>
 <li>No file storage. There’s nowhere on our side to put one.</li>
 <li>The page’s security policy (CSP) stops it loading code from anywhere else, or sending data to any website but this one. The only other outside connections are the WebRTC ones described above.</li>
 </ul>
@@ -125,6 +137,27 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 </div>
 </main>
 
-<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><a href="https://github.com/cameronspears/across">Source code</a></div></footer>
+<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><span><a href="privacy">Privacy</a> · <a href="https://github.com/cameronspears/across">Source code</a></span></div></footer>
+<script>
+'use strict';
+// one anonymous page view; see /privacy. Nothing is sent with Global Privacy Control, Do Not Track or the opt-out.
+(() => {
+  try {
+    if (localStorage.getItem('no-stats') === '1' || navigator.globalPrivacyControl === true || navigator.doNotTrack === '1') return;
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    for (let i = 5, t = Date.now(); i >= 0; i--, t = Math.floor(t / 256)) b[i] = t % 256;
+    b[6] = (b[6] & 15) | 0x70;
+    b[8] = (b[8] & 63) | 0x80;
+    const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+    const s = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+    let ref;
+    try {
+      ref = new URL(document.referrer).hostname;
+    } catch {}
+    const page = location.pathname.replace(/\.html$/, '');
+    navigator.sendBeacon('api/event', JSON.stringify({ e: '$pageview', p: { s, page, ...(ref && ref !== location.hostname && { ref }) } }));
+  } catch {}
+})();
+</script>
 </body>
 </html>
