@@ -1,7 +1,7 @@
 {
   "name": "Across",
   "short_name": "Across",
-  "description": "Send large files straight from your browser to theirs. Free, encrypted, no account, no size limit.",
+  "description": "Send large files straight from your browser to theirs. Free, encrypted, no account.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

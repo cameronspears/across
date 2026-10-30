@@ -16,7 +16,7 @@ const jobs = [
   ['og.png', 1200, 630, `<div style="width:1200px;height:630px;background:#fafafa;display:flex;flex-direction:column;justify-content:center;padding:0 120px;box-sizing:border-box;font-family:${font};color:#111">
     <div style="display:flex;align-items:center;gap:40px">${sized(mark, 140, 140)}
     <div style="font-size:128px;font-weight:700;letter-spacing:-4px;line-height:1">Across</div></div>
-    <div style="font-size:44px;line-height:1.35;margin-top:56px;color:#444;letter-spacing:-0.5px">Send large files straight from your browser to theirs.<br>Free, encrypted, no account, no size limit.</div></div>`],
+    <div style="font-size:44px;line-height:1.35;margin-top:56px;color:#444;letter-spacing:-0.5px">Send large files straight from your browser to theirs.<br>Free, encrypted, no account.</div></div>`],
 ];
 const b = await puppeteer.launch({ executablePath: exe, headless: true });
 const p = await b.newPage();
