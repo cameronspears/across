@@ -1,6 +1,6 @@
 import { mailbox } from '../lib/mailbox.js';
 import { storeFromEnv } from '../lib/guard.js';
-import { limiter, clientIp } from '../lib/limit.js';
+import { limiter, clientIp, crossSite } from '../lib/limit.js';
 
 const store = mailbox();
 const over = limiter(storeFromEnv());
@@ -56,6 +56,7 @@ function parse(bytes) {
 export async function GET(request) {
   const q = new URL(request.url).searchParams;
   const room = q.get('room') ?? '', me = q.get('me') ?? '';
+  if (crossSite(request)) return reply(403);
   if (!ROOM.test(room) || !roleOf(me)) return reply(400);
   const retry = await over(clientIp(request), 'signal:poll', POLLS_PER_MIN, 60);
   if (retry) return reply(429, null, retry);
@@ -63,6 +64,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  if (crossSite(request)) return reply(403);
+  if (Number(request.headers.get('content-length')) > MAX_BODY) return reply(400);
   const retry = await over(clientIp(request), 'signal:post', POSTS_PER_MIN, 60);
   if (retry) return reply(429, null, retry);
   const m = parse(await request.arrayBuffer());
