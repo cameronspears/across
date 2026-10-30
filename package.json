@@ -1,0 +1,9 @@
+{
+  "name": "file-transfer",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": { "dev": "node dev.mjs" },
+  "dependencies": { "redis": "^6.3.0" },
+  "devDependencies": { "@vercel/config": "^0.14.0" }
+}

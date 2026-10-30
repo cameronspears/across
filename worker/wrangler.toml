@@ -1,0 +1,11 @@
+name = "file-transfer-guard"
+main = "worker.js"
+compatibility_date = "2025-04-01"
+workers_dev = false
+
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+# The app's production origin, such as "https://file-transfer.example.com". No path, no secrets.
+APP_URL = "https://file-transfer-tan-alpha.vercel.app"

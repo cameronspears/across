@@ -1,0 +1,110 @@
+132a133,137
+> let relay2;
+> const relayServers2 = () => (relay2 ??= fetch('api/ice?n=2', { cache: 'no-store' })
+>   .then((r) => (r.ok ? r.json() : null))
+>   .then((body) => turnServers(body?.iceServers), () => []));
+> 
+193a199,201
+>   offer2: (m) => m.sdp?.type && typeof m.sdp.sdp === 'string' && { t: m.t, sdp: { type: m.sdp.type, sdp: m.sdp.sdp } },
+>   answer2: (m) => m.sdp?.type && typeof m.sdp.sdp === 'string' && { t: m.t, sdp: { type: m.sdp.type, sdp: m.sdp.sdp } },
+>   lanes: (m) => (m.n === 1 || m.n === 2) && { t: 'lanes', n: m.n },
+294a303
+>     p.pc2?.close();
+317c326
+<       const m = parseControl(e.data, ['hi', 'start', 'cancel', 'got']);
+---
+>       const m = parseControl(e.data, ['hi', 'start', 'cancel', 'got', 'answer2']);
+340a350,353
+>         if (hide) second();
+>         else p.second = Promise.resolve(false);
+>       } else if (m.t === 'answer2' && p.pc2 && !p.dc2) {
+>         p.pc2.setRemoteDescription(m.sdp).catch(() => {});
+347,348c360,362
+<         const tick = setInterval(() => !finished && row.set(Math.max(0, sent.n - dc.bufferedAmount), file.size), 300);
+<         pump(dc, file, Math.min(CHUNK, pc.sctp?.maxMessageSize || CHUNK), sent)
+---
+>         const tick = setInterval(() => !finished && row.set(Math.max(0, sent.n - dc.bufferedAmount - (p.dc2?.bufferedAmount ?? 0)), file.size), 300);
+>         Promise.race([p.second, sleep(6000)])
+>           .then(() => pump(p.dc2 ? [dc, p.dc2] : [dc], file, Math.min(CHUNK, pc.sctp?.maxMessageSize || CHUNK), sent))
+361a376,392
+> 
+>     // resolves when the second link opens, or false
+>     function second() {
+>       p.second = (async () => {
+>         const turn = await relayServers2();
+>         if (!turn.length || p.state === 'closed') return false;
+>         const pc2 = (p.pc2 = new RTCPeerConnection({ iceTransportPolicy: 'relay', iceServers: turn }));
+>         const ch = pc2.createDataChannel('f2');
+>         ch.binaryType = 'arraybuffer';
+>         ch.bufferedAmountLowThreshold = LOW;
+>         const open = new Promise((ok) => { ch.onopen = () => ok(true); ch.onclose = () => ok(false); });
+>         dc.send(JSON.stringify({ t: 'offer2', sdp: await describe(pc2) }));
+>         if (await open) p.dc2 = ch;
+>         return !!p.dc2;
+>       })().catch(() => false);
+>     }
+> 
+375c406
+< async function pump(dc, file, chunk, sent) {
+---
+> async function pump(lanes, file, chunk, sent) {
+377c408,409
+<   let off = 0, next = read(0);
+---
+>   let off = 0, next = read(0), k = 0;
+>   lanes[0].send(JSON.stringify({ t: 'lanes', n: lanes.length }));
+382a415
+>       const dc = lanes[k++ % lanes.length];
+389c422
+<   dc.send(JSON.stringify({ t: 'done' }));
+---
+>   lanes[0].send(JSON.stringify({ t: 'done' }));
+467a501,502
+>   let pc2, nLanes = 1, turn = 0;
+>   const queues = [[], []];
+565,566c600,603
+<       if (typeof e.data !== 'string') return onBytes(e.data);
+<       const m = parseControl(e.data, ['hi', 'meta', 'done']);
+---
+>       if (typeof e.data !== 'string') return onBytes(e.data, 0);
+>       // before any chunk on this channel, and handled at once: chunks are handled synchronously too
+>       if (e.data.includes('"lanes"')) return (nLanes = parseControl(e.data, ['lanes'])?.n ?? nLanes);
+>       const m = parseControl(e.data, ['hi', 'meta', 'done', 'offer2']);
+573c610
+<   function onBytes(ab) {
+---
+>   function onBytes(ab, lane) {
+575,577c612,619
+<     got += ab.byteLength; // before write: the sw sink detaches the buffer
+<     if (got > meta.size) return reject('The sender sent more than the file size.');
+<     sink.write(ab);
+---
+>     queues[lane].push(ab);
+>     while (queues[turn].length) {
+>       const next = queues[turn].shift();
+>       turn = (turn + 1) % nLanes;
+>       got += next.byteLength; // before write: the sw sink detaches the buffer
+>       if (got > meta.size) return reject('The sender sent more than the file size.');
+>       sink.write(next);
+>     }
+579a622,635
+>   async function second(sdp) {
+>     const turnServers2 = hide ? await relayServers2() : [];
+>     if (!turnServers2.length || pc2) return;
+>     pc2 = new RTCPeerConnection({ iceTransportPolicy: 'relay', iceServers: turnServers2 });
+>     pc2.ondatachannel = ({ channel }) => {
+>       channel.binaryType = 'arraybuffer';
+>       channel.onmessage = (e) => typeof e.data !== 'string' && onBytes(e.data, 1);
+>     };
+>     await pc2.setRemoteDescription(sdp);
+>     const answer2 = await describe(pc2);
+>     // the sender waits for this link before sending any chunk, so this is not traffic against a transfer
+>     if (phase !== 'failed' && phase !== 'done' && !got) dc.send(JSON.stringify({ t: 'answer2', sdp: answer2 }));
+>   }
+> 
+595a652,653
+>     } else if (m?.t === 'offer2') {
+>       if (!pc2 && !got) second(m.sdp).catch(() => {});
+596a655,656
+>       // the other lane's last chunks may still be arriving
+>       for (let i = 0; got < meta.size && i < 200; i++) await sleep(50);

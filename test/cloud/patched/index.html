@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>File transfer</title>
+<link rel="icon" href="data:,">
+<style>
+body{max-width:36em;margin:2em auto;padding:0 1em;font:17px/1.5 Georgia,serif}
+h1{font-size:1.4em;font-weight:normal;margin:0 0 1em}
+small{color:GrayText}
+a{overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<h1>File transfer</h1>
+
+<p id="pick" hidden><input type="file" id="file"><br>
+<small>Encrypted from your browser to theirs. No size limit.</small></p>
+
+<div id="send" hidden>
+<p>Sending <b id="s-name"></b> (<span id="s-size"></span>)</p>
+<p>Link:<br><a id="link" target="_blank"></a> <button id="copy">Copy</button><br>
+<small>Keep this tab open until the download finishes.</small></p>
+<div id="xfers"></div>
+</div>
+
+<div id="recv" hidden>
+<p><b id="r-name">Connecting…</b> <span id="r-size"></span></p>
+<p><button id="go" hidden>Download</button></p>
+<div id="r-xfer"></div>
+</div>
+
+<p id="privacy" hidden><label><input type="checkbox" id="hide"> Hide my IP address</label><br>
+<small id="hide-note"></small></p>
+
+<p id="msg"></p>
+
+<script>
+'use strict';
+const STUN = ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'];
+const BLOCK = 8 << 20;     // file read size; next block is read while this one sends
+const CHUNK = 256 << 10;   // per data-channel message (capped by what the peer allows)
+const HIGH = 4 << 20, LOW = 1 << 20;
+const GATHER_MS = 1500;    // send the SDP by then if it has a relay candidate
+const GATHER_MAX_MS = 5000; // and by then regardless
+const RELAY_REUSE_MS = 3_600_000; // credentials last 8 hours, so a connection made with them has at least 7
+const RELAY_RETRY_MS = 30_000;
+const HELLO_MS = 8000, HELLOS = 15;
+const PROVE_MS = 20000, UNPROVEN = 8;
+const RID = /^[a-z0-9]{16}$/;
+
+const $ = (s) => document.querySelector(s);
+const enc = new TextEncoder();
+const hex = (b) => Array.from(new Uint8Array(b), (x) => x.toString(16).padStart(2, '0')).join('');
+const say = (t) => ($('#msg').textContent = t);
+const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
+
+function rid(n) {
+  const abc = 'abcdefghijkmnpqrstuvwxyz23456789';
+  return Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => abc[b & 31]).join('');
+}
+
+function size(n) {
+  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  while (n >= 1000 && i < 4) { n /= 1000; i++; }
+  return (i ? n.toFixed(n < 10 ? 1 : 0) : n) + u[i];
+}
+
+// ---- trust: the server only ever sees hash(secret), never the secret ----
+
+async function roomOf(secret) {
+  return hex(await crypto.subtle.digest('SHA-256', enc.encode('et-room|' + secret))).slice(0, 32);
+}
+
+// Proves knowledge of the secret, bound to this exact DTLS connection's
+// certificates. A server relaying two separate connections (a middleman) would
+// see different fingerprints on each side, so its proofs can't match.
+async function proof(secret, role, pc, local) {
+  const fp = (d) => d.sdp.match(/^a=fingerprint:\S+ (\S+)/m)[1].toUpperCase();
+  const mine = fp(pc.localDescription), theirs = fp(pc.remoteDescription);
+  const [s, r] = local === 's' ? [mine, theirs] : [theirs, mine];
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return hex(await crypto.subtle.sign('HMAC', key, enc.encode(`et1|${role}|${s}|${r}`)));
+}
+
+// ---- signaling: each browser long-polls its own mailbox on the server ----
+
+// Who may send each handshake message. The server is untrusted, so anything else is dropped.
+const SIGNALS = { hello: { from: 'r', sdp: false }, offer: { from: 's', sdp: true }, answer: { from: 'r', sdp: true } };
+
+function parseSignal(env) {
+  const t = env?.data?.t;
+  const kind = Object.hasOwn(SIGNALS, t) && SIGNALS[t];
+  if (!kind || (kind.from === 's' ? env.from !== 's' : !RID.test(env.from))) return null;
+  if (!kind.sdp) return { from: env.from, t };
+  const d = env.data.sdp;
+  return d?.type === t && typeof d.sdp === 'string' ? { from: env.from, t, sdp: { type: t, sdp: d.sdp } } : null;
+}
+
+function signaling(room, me, onSignal) {
+  const ctl = new AbortController();
+  addEventListener('pagehide', () => ctl.abort());
+  (async () => {
+    for (let wait = 1000; !ctl.signal.aborted;) {
+      try {
+        const r = await fetch(`api/signal?room=${room}&me=${me}`, { signal: ctl.signal });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const list = await r.json();
+        if (ctl.signal.aborted) return;
+        for (const env of Array.isArray(list) ? list : []) {
+          const m = parseSignal(env);
+          if (m) onSignal(m);
+        }
+        wait = 1000;
+      } catch {
+        if (ctl.signal.aborted) return;
+        await sleep(wait);
+        wait = Math.min(wait * 2, 10_000);
+      }
+    }
+  })();
+  return {
+    post: (to, data) => fetch('api/signal', { method: 'POST', body: JSON.stringify({ room, from: me, to, data }) }).catch(() => {}),
+    stop: () => ctl.abort(),
+  };
+}
+
+// ---- privacy: each browser alone decides whether the other side may learn its IP address ----
+
+const RELAY_DOWN = 'The private relay is unavailable right now. To connect directly, untick Hide my IP address. ' +
+  'The other person will then see your IP address.';
+const NO_RELAY = 'no relay';
+const note = () => ($('#hide-note').textContent = hide
+  ? "The connection goes through an encrypted relay that can't read the file. The other person sees the relay's address, not yours."
+  : 'The other person can see your IP address. A direct connection is often faster.');
+
+let hide = true;
+try { hide = localStorage.getItem('hide-ip') !== '0'; } catch {}
+
+function privacyBox(onChange) {
+  const box = $('#hide');
+  box.checked = hide;
+  note();
+  $('#privacy').hidden = false;
+  box.onchange = () => {
+    hide = box.checked;
+    note();
+    try { localStorage.setItem('hide-ip', hide ? '1' : '0'); } catch {}
+    onChange();
+  };
+}
+
+const turnServers = (list) => (Array.isArray(list) ? list : []).flatMap((s) => {
+  const urls = [s?.urls].flat().filter((u) => typeof u === 'string' && /^turns?:/.test(u) && !/:53(\?|$)/.test(u));
+  return urls.length && typeof s.username === 'string' && typeof s.credential === 'string'
+    ? [{ urls, username: s.username, credential: s.credential }] : [];
+});
+
+// TURN servers from /api/ice, or [] while the relay is unavailable.
+let relay = { at: -Infinity, servers: [] };
+function relayServers() {
+  if (Date.now() - relay.at < (relay.servers.length ? RELAY_REUSE_MS : RELAY_RETRY_MS)) return relay.servers;
+  return (relay.pending ??= fetch('api/ice', { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((body) => turnServers(body?.iceServers), () => [])
+    .then((servers) => (relay = { at: Date.now(), servers }).servers));
+}
+
+let relay2;
+const relayServers2 = () => (relay2 ??= fetch('api/ice?n=2', { cache: 'no-store' })
+  .then((r) => (r.ok ? r.json() : null))
+  .then((body) => turnServers(body?.iceServers), () => []));
+
+// Hidden: relay candidates only, so nothing this browser sends carries its address.
+// Shown: direct when possible, with the relay for networks where direct fails.
+// null: hidden, and there is no relay to hide behind.
+async function rtcConfig(hidden) {
+  const turn = await relayServers();
+  if (hidden) return turn.length ? { iceTransportPolicy: 'relay', iceServers: turn } : null;
+  return { iceTransportPolicy: 'all', iceServers: [{ urls: STUN }, ...turn] };
+}
+
+// The browser's relay-only policy is the guarantee; this refuses to send anything else in case
+// it fails, and blanks the related address, which some browsers fill with the local one.
+function relayOnly(sdp) {
+  const lines = sdp.split('\r\n').map((line) => {
+    if (!line.startsWith('a=candidate:')) return line;
+    const f = line.split(' ');
+    if (f[6] !== 'typ' || f[7] !== 'relay') throw new Error(NO_RELAY);
+    const at = f.indexOf('raddr');
+    if (at > 0) f.splice(at, 4, 'raddr', '0.0.0.0', 'rport', '0');
+    return f.join(' ');
+  });
+  if (!lines.some((l) => l.startsWith('a=candidate:'))) throw new Error(NO_RELAY);
+  return lines.join('\r\n');
+}
+
+// Non-trickle ICE: the SDP carries every candidate, so a handshake is three messages.
+// Waits for a relay candidate when there is a relay, since it is what rescues blocked networks.
+async function describe(pc) {
+  await pc.setLocalDescription();
+  const { iceTransportPolicy, iceServers = [] } = pc.getConfiguration();
+  const turn = iceServers.some((s) => [s.urls].flat().some((u) => /^turns?:/.test(u)));
+  await new Promise((ok) => {
+    let late = false;
+    const check = () => (pc.iceGatheringState === 'complete' ||
+      (late && (!turn || pc.localDescription.sdp.includes(' typ relay')))) && ok();
+    pc.addEventListener('icecandidate', check);
+    pc.addEventListener('icegatheringstatechange', check);
+    setTimeout(() => { late = true; check(); }, GATHER_MS);
+    setTimeout(ok, GATHER_MAX_MS);
+    check();
+  });
+  const { type, sdp } = pc.localDescription;
+  return { type, sdp: iceTransportPolicy === 'relay' ? relayOnly(sdp) : sdp };
+}
+
+// ---- data channel control messages; the other browser is untrusted too ----
+
+// A name can carry controls that disguise it: U+202E shows "invoice\u202Efdp.exe" as "invoiceexe.pdf".
+function cleanName(name) {
+  const clean = name.replace(/[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+    .replace(/[\/\\]/g, '_').trim();
+  return Array.from(clean).slice(0, 255).join('') || 'file';
+}
+
+const CONTROLS = {
+  hi: (m) => typeof m.p === 'string' && { t: 'hi', p: m.p },
+  meta: (m) => typeof m.name === 'string' && Number.isSafeInteger(m.size) && m.size >= 0 &&
+    { t: 'meta', name: cleanName(m.name), size: m.size },
+  start: () => ({ t: 'start' }),
+  cancel: () => ({ t: 'cancel' }),
+  done: () => ({ t: 'done' }),
+  got: () => ({ t: 'got' }),
+  offer2: (m) => m.sdp?.type && typeof m.sdp.sdp === 'string' && { t: m.t, sdp: { type: m.sdp.type, sdp: m.sdp.sdp } },
+  answer2: (m) => m.sdp?.type && typeof m.sdp.sdp === 'string' && { t: m.t, sdp: { type: m.sdp.type, sdp: m.sdp.sdp } },
+  lanes: (m) => (m.n === 1 || m.n === 2) && { t: 'lanes', n: m.n },
+};
+
+function parseControl(data, allowed) {
+  let m;
+  try { m = JSON.parse(data); } catch { return null; }
+  return (allowed.includes(m?.t) && CONTROLS[m.t](m)) || null;
+}
+
+// a progress bar made of text
+const CELLS = 24;
+function view(parent) {
+  const label = document.createElement('small'), bar = document.createElement('code'), stats = document.createElement('span');
+  const el = document.createElement('p');
+  el.append(label, document.createElement('br'), bar, document.createElement('br'), stats);
+  parent.append(el);
+  let samples = [];
+  return {
+    label: (t) => (label.textContent = t),
+    remove: () => el.remove(),
+    set(n, total) {
+      const now = performance.now();
+      samples.push([now, n]);
+      while (samples.length > 2 && now - samples[0][0] > 2000) samples.shift();
+      const [t0, n0] = samples[0];
+      const bps = now > t0 ? ((n - n0) * 1000) / (now - t0) : 0;
+      const full = total ? Math.floor((n / total) * CELLS) : CELLS;
+      bar.textContent = Array.from({ length: CELLS }, (_, i) =>
+        i < full ? '█' : '░').join('');
+      stats.textContent = n >= total ? `${size(total)}, done` : `${Math.floor((n / total) * 100)}% ${size(n)}/${size(total)}${bps ? ` (${size(bps)}/s)` : ''}`;
+    },
+  };
+}
+
+// ================= sender =================
+
+function pickFile() {
+  $('#pick').hidden = false;
+  privacyBox(() => {});
+  $('#file').onchange = (e) => e.target.files[0] && send(e.target.files[0]);
+  // dropping a file anywhere on the page works too
+  addEventListener('dragover', (e) => e.preventDefault());
+  addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (!$('#pick').hidden && e.dataTransfer.files[0]) send(e.dataTransfer.files[0]);
+  });
+}
+
+async function send(file) {
+  $('#pick').hidden = true;
+  $('#send').hidden = false;
+  $('#s-name').textContent = file.name;
+  $('#s-size').textContent = size(file.size);
+  addEventListener('beforeunload', (e) => e.preventDefault());
+
+  const secret = rid(20);
+  const link = `${location.origin}${location.pathname}#${secret}`;
+  $('#link').href = $('#link').textContent = link;
+  $('#copy').onclick = () => navigator.clipboard.writeText(link).then(() => {
+    $('#copy').textContent = 'Copied';
+    setTimeout(() => ($('#copy').textContent = 'Copy'), 1200);
+  });
+  say('Waiting for the other side to open the link…');
+
+  // receiver id -> { id, pc, state, offer, timer }
+  // state: offering -> offered -> connecting -> verified, or closed.
+  // blocked: hidden and the relay is unavailable, so nothing was created or sent.
+  const peers = new Map();
+  const unproven = () => [...peers.values()].filter((p) => p.state !== 'verified').length;
+  const sig = signaling(await roomOf(secret), 's', (m) => {
+    const p = peers.get(m.from);
+    if (m.t === 'hello' && !p && unproven() < UNPROVEN) connect(m.from);
+    else if (m.t === 'hello' && p?.state === 'offered') sig.post(m.from, { t: 'offer', sdp: p.offer });
+    else if (m.t === 'answer' && p?.state === 'offered' && p.pc.signalingState === 'have-local-offer') {
+      p.state = 'connecting';
+      p.pc.setRemoteDescription(m.sdp).catch(() => drop(p));
+    }
+  });
+
+  // Peers that haven't exchanged descriptions yet start over with the new choice. The rest
+  // keep theirs: the other side already has those addresses.
+  privacyBox(() => {
+    for (const p of [...peers.values()]) {
+      if (p.state === 'offering' || p.state === 'offered' || p.state === 'blocked') {
+        drop(p);
+        connect(p.id);
+      }
+    }
+    status();
+  });
+  status();
+
+  async function status() {
+    const blocked = !(await rtcConfig(hide));
+    const idle = ![...peers.values()].some((p) => p.state === 'verified');
+    say(blocked ? RELAY_DOWN : idle ? 'Waiting for the other side to open the link…' : '');
+  }
+
+  function drop(p) {
+    p.state = 'closed';
+    clearTimeout(p.timer);
+    p.pc?.close();
+    p.pc2?.close();
+    if (peers.get(p.id) === p) peers.delete(p.id);
+  }
+
+  async function connect(id) {
+    const p = { id, state: 'offering' };
+    peers.set(id, p);
+    p.timer = setTimeout(() => drop(p), PROVE_MS);
+    const config = await rtcConfig(hide);
+    if (p.state !== 'offering') return;
+    if (!config) {
+      p.state = 'blocked';
+      return say(RELAY_DOWN);
+    }
+    const pc = (p.pc = new RTCPeerConnection(config));
+    const dc = pc.createDataChannel('f');
+    dc.binaryType = 'arraybuffer';
+    dc.bufferedAmountLowThreshold = LOW;
+    let row, started = false, finished = false;
+
+    dc.onopen = async () => dc.send(JSON.stringify({ t: 'hi', p: await proof(secret, 's', pc, 's') }));
+    let queue = Promise.resolve();
+    dc.onmessage = (e) => {
+      const m = parseControl(e.data, ['hi', 'start', 'cancel', 'got', 'answer2']);
+      if (!m) return drop(p);
+      queue = queue.then(() => onControl(m)).catch(() => drop(p));
+    };
+    dc.onclose = () => {
+      drop(p);
+      if (!row || finished) return;
+      if (started) return row.label('Disconnected.');
+      // they left before pressing Download, or reconnected to change their privacy setting
+      row.remove();
+      status();
+    };
+
+    async function onControl(m) {
+      if (p.state !== 'verified') {
+        // nothing is accepted before the proof
+        if (m.t !== 'hi' || m.p !== await proof(secret, 'r', pc, 's')) return drop(p);
+        clearTimeout(p.timer);
+        p.state = 'verified';
+        say('');
+        row = view($('#xfers'));
+        row.label('Connected. Waiting for them to press Download.');
+        row.set(0, file.size);
+        dc.send(JSON.stringify({ t: 'meta', name: file.name, size: file.size }));
+        if (hide) second();
+        else p.second = Promise.resolve(false);
+      } else if (m.t === 'answer2' && p.pc2 && !p.dc2) {
+        p.pc2.setRemoteDescription(m.sdp).catch(() => {});
+      } else if (m.t === 'start' && !started) {
+        started = true;
+        row.label('Sending');
+        // progress is measured here, not reported back: traffic flowing the
+        // other way mid-transfer makes Chrome's data channels stall for ~20s
+        const sent = { n: 0 };
+        const tick = setInterval(() => !finished && row.set(Math.max(0, sent.n - dc.bufferedAmount - (p.dc2?.bufferedAmount ?? 0)), file.size), 300);
+        Promise.race([p.second, sleep(6000)])
+          .then(() => pump(p.dc2 ? [dc, p.dc2] : [dc], file, Math.min(CHUNK, pc.sctp?.maxMessageSize || CHUNK), sent))
+          .catch(() => !finished && row.label('Stopped.'))
+          .finally(() => !finished && clearInterval(tick));
+        dc.addEventListener('close', () => clearInterval(tick));
+      } else if (m.t === 'got') {
+        finished = true;
+        row.set(file.size, file.size);
+        row.label('Received.');
+      } else if (m.t === 'cancel') {
+        finished = true;
+        row.label('Cancelled by the receiver.');
+      }
+    }
+
+
+    // resolves when the second link opens, or false
+    function second() {
+      p.second = (async () => {
+        const turn = await relayServers2();
+        if (!turn.length || p.state === 'closed') return false;
+        const pc2 = (p.pc2 = new RTCPeerConnection({ iceTransportPolicy: 'relay', iceServers: turn }));
+        const ch = pc2.createDataChannel('f2');
+        ch.binaryType = 'arraybuffer';
+        ch.bufferedAmountLowThreshold = LOW;
+        const open = new Promise((ok) => { ch.onopen = () => ok(true); ch.onclose = () => ok(false); });
+        dc.send(JSON.stringify({ t: 'offer2', sdp: await describe(pc2) }));
+        if (await open) p.dc2 = ch;
+        return !!p.dc2;
+      })().catch(() => false);
+    }
+
+    describe(pc).then((offer) => {
+      if (p.state !== 'offering') return;
+      p.offer = offer;
+      p.state = 'offered';
+      sig.post(id, { t: 'offer', sdp: offer });
+    }, (err) => {
+      if (p.state !== 'offering') return;
+      drop(p);
+      if (err.message === NO_RELAY) say(RELAY_DOWN);
+    });
+  }
+}
+
+async function pump(lanes, file, chunk, sent) {
+  const read = (at) => file.slice(at, at + BLOCK).arrayBuffer();
+  let off = 0, next = read(0), k = 0;
+  lanes[0].send(JSON.stringify({ t: 'lanes', n: lanes.length }));
+  while (off < file.size) {
+    const buf = new Uint8Array(await next);
+    const end = off + buf.length;
+    next = end < file.size ? read(end) : null;
+    for (let i = 0; i < buf.length; i += chunk) {
+      const dc = lanes[k++ % lanes.length];
+      if (dc.bufferedAmount > HIGH) await drained(dc);
+      dc.send(buf.subarray(i, i + chunk));
+      sent.n += Math.min(chunk, buf.length - i);
+    }
+    off = end;
+  }
+  lanes[0].send(JSON.stringify({ t: 'done' }));
+}
+
+function drained(dc) {
+  return new Promise((ok, fail) => {
+    const off = () => { dc.onbufferedamountlow = null; dc.removeEventListener('close', bad); };
+    const bad = () => { off(); fail(); };
+    dc.onbufferedamountlow = () => { off(); ok(); };
+    dc.addEventListener('close', bad);
+  });
+}
+
+// ================= receiver =================
+
+let swReady = Promise.resolve(null);
+
+// Every sink: write(ArrayBuffer) sync and ordered, close() -> Promise<url?>, abort().
+async function openSink(meta, onCancel) {
+  // a fast click can beat the worker's first startup; give it a moment
+  const sw = await Promise.race([swReady, new Promise((ok) => setTimeout(ok, 1500, null))]);
+  const mode = new URLSearchParams(location.search).get('sink') ||
+    (sw && !/iP(hone|ad|od)|^((?!chrome|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent) ? 'sw'
+      : 'showSaveFilePicker' in window ? 'fs' : 'mem');
+
+  if (mode === 'sw') {
+    // stream straight into a normal browser download
+    const id = rid(20);
+    const { port1, port2 } = new MessageChannel();
+    await new Promise((ok) => {
+      port1.onmessage = (e) => (e.data === 'ready' ? ok() : e.data === 'cancel' && onCancel());
+      sw.postMessage({ type: 'register', id, name: meta.name, size: meta.size }, [port2]);
+    });
+    const frame = document.createElement('iframe');
+    frame.hidden = true;
+    frame.src = `dl/${id}/${encodeURIComponent(meta.name)}`;
+    document.body.append(frame);
+    const ping = setInterval(() => sw.postMessage({ type: 'ping' }), 10_000); // Firefox reaps idle workers
+    const stop = () => { clearInterval(ping); setTimeout(() => frame.remove(), 60_000); };
+    return {
+      write: (ab) => port1.postMessage(ab, [ab]),
+      close: async () => { port1.postMessage('end'); stop(); },
+      abort: () => { port1.postMessage('abort'); stop(); },
+    };
+  }
+  if (mode === 'fs') {
+    const handle = await showSaveFilePicker({ suggestedName: meta.name });
+    // some contexts (embedded browsers, private windows, protected folders)
+    // show the picker but refuse writing; fall back to memory then
+    const w = await handle.createWritable().catch(() => null);
+    if (w) {
+      let q = Promise.resolve();
+      return {
+        write: (ab) => (q = q.then(() => w.write(ab))),
+        close: async () => { await q; await w.close(); },
+        abort: () => w.abort().catch(() => {}),
+      };
+    }
+  }
+  let parts = [];
+  return {
+    write: (ab) => parts.push(ab),
+    // never the sender's MIME type: a text/html blob would open as a page on this origin
+    close: async () => URL.createObjectURL(new Blob(parts.splice(0), { type: 'application/octet-stream' })),
+    abort: () => (parts = []),
+  };
+}
+
+async function receive(secret) {
+  $('#recv').hidden = false;
+  if ('serviceWorker' in navigator) {
+    swReady = navigator.serviceWorker.register('sw.js')
+      .then(() => navigator.serviceWorker.ready)
+      .then((r) => r.active, () => null);
+  }
+
+  // hello -> answering -> answered -> verifying -> verified -> ready -> saving -> receiving -> done, or failed.
+  // blocked: hidden and the relay is unavailable, so nothing was created or sent.
+  // Until Download, changing the privacy box starts over from hello.
+  const room = await roomOf(secret);
+  let pc2, nLanes = 1, turn = 0;
+  const queues = [[], []];
+  let phase, config, sig, hello, pc, dc, offer, answer, meta, sink, xfer, timer, got = 0, hellos = 0, attempts = 0;
+  const slow = setTimeout(() => !meta && phase !== 'failed' && phase !== 'blocked' &&
+    say('Looking for the sender. Their tab must still be open.'), 6000);
+  privacyBox(() => !sink && phase !== 'saving' && start());
+  start();
+
+  // Each attempt has a fresh receiver id, so the sender sees a new peer, not a changed one.
+  async function start() {
+    const attempt = ++attempts;
+    hangUp();
+    phase = 'hello';
+    $('#go').hidden = true;
+    say('');
+    config = await rtcConfig(hide);
+    if (attempt !== attempts) return;
+    if (!config) return block();
+    sig = signaling(room, rid(16), onSignal);
+    hellos = 0;
+    hello = setInterval(sayHello, HELLO_MS);
+    sayHello();
+  }
+
+  function hangUp() {
+    clearInterval(hello);
+    sig?.stop();
+    const old = pc;
+    pc = dc = offer = answer = undefined;
+    old?.close();
+  }
+
+  function block() {
+    hangUp();
+    phase = 'blocked';
+    say(RELAY_DOWN);
+  }
+
+  function sayHello() {
+    if (++hellos > HELLOS) return reject('Could not reach the sender. Their tab must be open. Reload to try again.');
+    sig.post('s', { t: 'hello' });
+  }
+
+  function fail(text) {
+    phase = 'failed';
+    clearInterval(hello);
+    clearInterval(timer);
+    clearTimeout(slow);
+    sig?.stop();
+    sink?.abort();
+    $('#go').hidden = true;
+    say(text);
+  }
+  function reject(text) {
+    fail(text);
+    pc?.close();
+  }
+
+  async function onSignal(m) {
+    if (m.t !== 'offer') return;
+    if (phase === 'answered' && m.sdp.sdp === offer) return sig.post('s', { t: 'answer', sdp: answer });
+    if (phase !== 'hello' && phase !== 'answered') return;
+    // a different offer means the sender dropped our first attempt and started over
+    pc?.close();
+    phase = 'answering';
+    offer = m.sdp.sdp;
+    const mine = (pc = new RTCPeerConnection(config));
+    mine.ondatachannel = (e) => mine === pc && setup(e.channel, mine);
+    mine.onconnectionstatechange = () => mine === pc && mine.connectionState === 'failed' &&
+      phase !== 'done' && phase !== 'failed' && fail('Could not connect. Try another network or turn off a VPN.');
+    try {
+      await mine.setRemoteDescription(m.sdp);
+      const desc = await describe(mine);
+      if (mine !== pc || phase !== 'answering') return;
+      answer = desc;
+      phase = 'answered';
+      sig.post('s', { t: 'answer', sdp: answer });
+    } catch (err) {
+      if (mine !== pc || phase !== 'answering') return;
+      if (err.message === NO_RELAY) block();
+      else phase = 'hello';
+    }
+  }
+
+  function setup(channel, conn) {
+    dc = channel;
+    channel.binaryType = 'arraybuffer';
+    const current = () => channel === dc;
+    channel.onopen = async () => {
+      if (!current()) return;
+      phase = 'verifying';
+      clearInterval(hello);
+      sig.stop(); // connected; the server is out of the picture
+      const p = await proof(secret, 'r', conn, 'r');
+      if (current()) channel.send(JSON.stringify({ t: 'hi', p }));
+    };
+    let queue = Promise.resolve();
+    channel.onmessage = (e) => {
+      if (!current()) return;
+      if (typeof e.data !== 'string') return onBytes(e.data, 0);
+      // before any chunk on this channel, and handled at once: chunks are handled synchronously too
+      if (e.data.includes('"lanes"')) return (nLanes = parseControl(e.data, ['lanes'])?.n ?? nLanes);
+      const m = parseControl(e.data, ['hi', 'meta', 'done', 'offer2']);
+      queue = queue.then(() => current() && onControl(m, conn)).catch((err) => reject(`Could not save: ${err.message}`));
+    };
+    channel.onclose = () => current() && phase !== 'done' && phase !== 'failed' &&
+      fail(got ? `The sender disconnected at ${size(got)}.` : 'The sender disconnected.');
+  }
+
+  function onBytes(ab, lane) {
+    if (phase !== 'receiving') return; // chunks still in flight after a cancel
+    queues[lane].push(ab);
+    while (queues[turn].length) {
+      const next = queues[turn].shift();
+      turn = (turn + 1) % nLanes;
+      got += next.byteLength; // before write: the sw sink detaches the buffer
+      if (got > meta.size) return reject('The sender sent more than the file size.');
+      sink.write(next);
+    }
+  }
+
+  async function second(sdp) {
+    const turnServers2 = hide ? await relayServers2() : [];
+    if (!turnServers2.length || pc2) return;
+    pc2 = new RTCPeerConnection({ iceTransportPolicy: 'relay', iceServers: turnServers2 });
+    pc2.ondatachannel = ({ channel }) => {
+      channel.binaryType = 'arraybuffer';
+      channel.onmessage = (e) => typeof e.data !== 'string' && onBytes(e.data, 1);
+    };
+    await pc2.setRemoteDescription(sdp);
+    const answer2 = await describe(pc2);
+    // the sender waits for this link before sending any chunk, so this is not traffic against a transfer
+    if (phase !== 'failed' && phase !== 'done' && !got) dc.send(JSON.stringify({ t: 'answer2', sdp: answer2 }));
+  }
+
+  async function onControl(m, conn) {
+    if (phase === 'failed' || phase === 'done') return;
+    if (m?.t === 'hi' && phase === 'verifying') {
+      const want = await proof(secret, 's', conn, 'r');
+      if (conn !== pc) return; // started over while hashing
+      if (m.p !== want) return reject('Could not verify the sender. The connection may have been tampered with.');
+      phase = 'verified';
+    } else if (m?.t === 'meta' && phase === 'verified') {
+      clearTimeout(slow);
+      meta = m;
+      phase = 'ready';
+      say('');
+      $('#r-name').textContent = meta.name;
+      $('#r-size').textContent = `(${size(meta.size)})`;
+      document.title = meta.name;
+      $('#go').hidden = false;
+    } else if (m?.t === 'offer2') {
+      if (!pc2 && !got) second(m.sdp).catch(() => {});
+    } else if (m?.t === 'done' && phase === 'receiving') {
+      // the other lane's last chunks may still be arriving
+      for (let i = 0; got < meta.size && i < 200; i++) await sleep(50);
+      clearInterval(timer);
+      if (got !== meta.size) return reject(`The transfer stopped at ${size(got)} of ${size(meta.size)}.`);
+      const url = await sink.close();
+      phase = 'done';
+      xfer.set(meta.size, meta.size);
+      dc.send(JSON.stringify({ t: 'got' }));
+      if (url) {
+        const a = Object.assign(document.createElement('a'), { href: url, download: meta.name, textContent: 'Save file' });
+        a.click();
+        $('#msg').replaceChildren('Done. ', a);
+      } else say('Saved.');
+    } else {
+      reject('The sender sent something unexpected.');
+    }
+  }
+
+  $('#go').onclick = async () => {
+    if (phase !== 'ready') return;
+    phase = 'saving';
+    $('#go').disabled = $('#hide').disabled = true;
+    let opened;
+    try {
+      opened = await openSink(meta, () => {
+        if (phase !== 'receiving') return;
+        dc.send(JSON.stringify({ t: 'cancel' }));
+        fail('Cancelled.');
+      });
+    } catch (err) {
+      if (phase !== 'saving') return;
+      phase = 'ready';
+      $('#go').disabled = $('#hide').disabled = false;
+      if (err.name !== 'AbortError') say(`Could not save: ${err.message}`);
+      return;
+    }
+    if (phase !== 'saving') return opened.abort(); // the sender left while the picker was open
+    sink = opened;
+    phase = 'receiving';
+    $('#go').hidden = true;
+    xfer = view($('#r-xfer'));
+    xfer.set(0, meta.size);
+    dc.send(JSON.stringify({ t: 'start' }));
+    timer = setInterval(() => xfer.set(got, meta.size), 300);
+  };
+  addEventListener('beforeunload', (e) => phase === 'receiving' && e.preventDefault());
+}
+
+// ================= boot =================
+
+addEventListener('hashchange', () => location.reload());
+addEventListener('pageshow', (e) => e.persisted && location.reload());
+const secret = location.hash.slice(1);
+if (!window.isSecureContext) say('This page needs HTTPS.');
+else if (/^[a-z0-9]{20}$/.test(secret)) receive(secret);
+else pickFile();
+</script>
+</body>
+</html>

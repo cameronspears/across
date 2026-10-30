@@ -1,0 +1,1591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#fafafa">
+<title>Across</title>
+<meta name="description" content="Send a file straight from your browser to theirs. Encrypted end to end, no size limit, no account, nothing stored on a server.">
+<meta property="og:title" content="Across">
+<meta property="og:description" content="Send a file straight from your browser to theirs. Encrypted, no account, nothing stored.">
+<meta property="og:url" content="https://acrossfile.com">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='19' height='19' rx='6' fill='%23fff'/%3E%3Cpath d='M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3'/%3E%3C/svg%3E">
+<style>
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --r:16px;--r-in:10px;--r-ctl:10px;--r-sm:8px;
+  --s1:4px;--s2:8px;--s3:16px;--s4:24px;--s5:48px;--s6:80px;
+  --spring:linear(0,.013 .6%,.05 1.2%,.2 2.5%,.43 4.1%,.72 6.3%,.94 8.6%,1.06 10.7%,1.11 12.7%,1.12 14.3%,1.1 16.4%,1.05 19.6%,1.01 23%,.99 27%,.995 34%,1.002 45%,1);
+  --spring-soft:linear(0,.06 4%,.24 9%,.53 16%,.83 25%,1.01 34%,1.04 41%,1.03 49%,1.005 62%,1);
+  --out:cubic-bezier(.23,1,.32,1);
+  color-scheme:light;
+  --bg:oklch(98.6% 0 0);
+  --strong:oklch(14% 0 0);--text:oklch(25% 0 0);--muted:oklch(43% 0 0);
+  --rule:oklch(0% 0 0 / .08);--fill:oklch(0% 0 0 / .045);--fill-hover:oklch(0% 0 0 / .075);
+  --accent:var(--strong);--accent-hover:oklch(28% 0 0);--on-accent:oklch(99.5% 0 0);
+  --bad:oklch(55% .18 25);
+  --glass:oklch(100% 0 0 / .72);--glass-strong:oklch(100% 0 0 / .9);
+  --glass-edge:oklch(100% 0 0 / .9);--glass-rim:oklch(0% 0 0 / .07);
+  --glass-shadow:0 1px 1px oklch(0% 0 0 / .04),0 10px 30px -10px oklch(0% 0 0 / .1),0 30px 70px -30px oklch(0% 0 0 / .12);
+  --sheen:oklch(100% 0 0 / .9);
+  --press-shadow:0 1px 0 oklch(0% 0 0 / .1),0 2px 3px -1px oklch(0% 0 0 / .1),0 6px 14px -6px oklch(0% 0 0 / .16);
+  --press-shadow-down:0 0 0 oklch(0% 0 0 / .1),0 1px 1px oklch(0% 0 0 / .12);
+  --primary-shadow:0 1px 0 oklch(0% 0 0),0 2px 3px -1px oklch(0% 0 0 / .28),0 10px 20px -10px oklch(0% 0 0 / .5);
+  --primary-shadow-down:0 0 0 oklch(0% 0 0),0 1px 1px oklch(0% 0 0 / .28);
+  --light-a:oklch(100% 0 0 / .95);--light-b:oklch(95% 0 0 / .7);--light-c:oklch(100% 0 0 / .9);
+  --grain-opacity:.42;
+  --switch-off:oklch(0% 0 0 / .3);
+  --glow:oklch(93% 0 0 / .6);
+  --blur:blur(22px) saturate(1.4);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);scrollbar-color:var(--fill-hover) transparent;-webkit-text-size-adjust:100%;accent-color:var(--accent)}
+body{margin:0;min-height:100vh;min-height:100dvh;color:var(--text);font:400 16px/1.55 var(--font);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+::selection{background:color-mix(in oklch,var(--strong) 26%,transparent);color:var(--strong)}
+input{caret-color:var(--strong)}
+b,strong{color:var(--strong);font-weight:600}
+a{color:var(--strong);text-underline-offset:3px;text-decoration-thickness:1px;overflow-wrap:anywhere}
+button,input{font:inherit;color:inherit}
+small{font-size:inherit}
+[hidden]{display:none !important}
+:focus-visible{outline:2px solid var(--strong);outline-offset:3px}
+.vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);border:0;white-space:nowrap}
+
+/* the ground: soft neutral light, then grain, both behind every element */
+.light{position:fixed;inset:-20vmax;z-index:-2;pointer-events:none;overflow:hidden}
+.light i{position:absolute;width:80vmax;height:80vmax;border-radius:50%}
+.light i:nth-child(1){left:8vmax;top:-10vmax;background:radial-gradient(closest-side,var(--light-a),transparent);animation:drift-a 44s ease-in-out infinite alternate}
+.light i:nth-child(2){right:-10vmax;top:24vmax;background:radial-gradient(closest-side,var(--light-b),transparent);animation:drift-b 52s ease-in-out infinite alternate}
+.light i:nth-child(3){left:-6vmax;bottom:-24vmax;background:radial-gradient(closest-side,var(--light-c),transparent);animation:drift-c 58s ease-in-out infinite alternate}
+@keyframes drift-a{to{transform:translate(10vmax,8vmax) scale(1.08)}}
+@keyframes drift-b{to{transform:translate(-14vmax,-6vmax) scale(.94)}}
+@keyframes drift-c{to{transform:translate(8vmax,-12vmax) scale(1.1)}}
+.glow{position:absolute;left:50%;top:150px;width:min(760px,100%);height:520px;transform:translateX(-50%);z-index:-1;pointer-events:none;border-radius:50%;
+  background:radial-gradient(closest-side,var(--glow),transparent);filter:none}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:var(--grain-opacity);mix-blend-mode:overlay;background-size:160px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='1.4'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* glass: chrome and the one card on each screen */
+.glass{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-radius:var(--r);
+  box-shadow:inset 0 1px 0 var(--glass-edge),inset 0 0 0 1px var(--glass-rim),var(--glass-shadow);position:relative;isolation:isolate}
+.lit::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:radial-gradient(480px circle at var(--mx,50%) var(--my,0%),var(--sheen),transparent 50%);opacity:0;transition:opacity .4s var(--out)}
+@media (hover:hover) and (pointer:fine){.lit:hover::after{opacity:1}}
+@media (prefers-reduced-transparency:reduce){.glass{background:var(--glass-strong);-webkit-backdrop-filter:none;backdrop-filter:none}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:var(--glass-strong)}}
+
+/* top bar */
+.bar{position:sticky;top:0;z-index:5;padding-top:env(safe-area-inset-top);background:color-mix(in oklch,var(--bg) 55%,transparent);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-bottom:1px solid var(--rule)}
+.wrap{width:100%;max-width:688px;margin:0 auto;padding-inline:max(var(--s3),env(safe-area-inset-left)) max(var(--s3),env(safe-area-inset-right))}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);height:56px}
+.mark{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:var(--strong);text-decoration:none;font-weight:600;font-size:15px;letter-spacing:-.005em;border-radius:var(--r-sm)}
+.mark svg{width:22px;height:22px;flex:none}
+.bar small{color:var(--muted);font-size:13px;display:inline-flex;align-items:center;gap:8px}
+.bar small svg{width:14px;height:14px;flex:none}
+
+main{flex:1;padding-block:var(--s5) var(--s6);position:relative;isolation:isolate}
+h1.small{font-size:clamp(28px,4.4vw,40px)}
+#recv .card{margin-top:var(--s4)}
+h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px);line-height:1.06;letter-spacing:-.025em;text-wrap:balance}
+.lead{margin:var(--s3) 0 0;color:var(--muted);font-size:17px;max-width:32em;text-wrap:pretty}
+
+/* buttons: depth from below, a press sinks into it */
+.btn{height:42px;padding:0 18px;border-radius:var(--r-ctl);border:0;cursor:pointer;font-weight:500;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  text-decoration:none;white-space:nowrap;flex:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+  transition:transform .35s var(--spring),background-color .15s var(--out),box-shadow .25s var(--out),opacity .2s var(--out)}
+.btn svg{width:16px;height:16px;flex:none}
+.primary,#msg button{background:var(--accent);color:var(--on-accent);box-shadow:var(--primary-shadow)}
+.ghost,#msg a{background:var(--glass-strong);color:var(--strong);box-shadow:inset 0 0 0 1px var(--glass-rim),var(--press-shadow);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+@media (hover:hover) and (pointer:fine){
+  .btn:hover,#msg button:hover,#msg a:hover{transform:translateY(-1px)}
+  .primary:hover,#msg button:hover{background:var(--accent-hover)}
+  .ghost:hover,#msg a:hover{background:var(--glass)}
+}
+.btn:active,.btn.down{transform:translateY(1px) scale(.97);transition-duration:.08s}
+.primary:active,.primary.down,#msg button:active{box-shadow:var(--primary-shadow-down)}
+.ghost:active,.ghost.down,#msg a:active{box-shadow:inset 0 0 0 1px var(--glass-rim),var(--press-shadow-down)}
+.btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+
+/* pick: the drop zone is the product */
+.drop{display:flex;flex-direction:column;align-items:center;text-align:center;gap:var(--s2);margin-top:var(--s5);padding:var(--s5) var(--s4);cursor:pointer;
+  transition:transform .5s var(--spring),box-shadow .3s var(--out)}
+.drop::before{content:"";position:absolute;inset:10px;border-radius:calc(var(--r) - 10px);border:1.5px solid transparent;pointer-events:none;transition:border-color .25s var(--out),inset .4s var(--spring)}
+.drop-icon{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;background:var(--glass-strong);color:var(--strong);box-shadow:inset 0 0 0 1px var(--glass-rim),var(--press-shadow);margin-bottom:var(--s2);transition:transform .5s var(--spring),background-color .25s var(--out),color .25s var(--out)}
+.drop-icon svg{width:26px;height:26px}
+.drop-title{font-size:19px;font-weight:600;color:var(--strong)}
+.drop-sub{color:var(--muted);font-size:14px}
+.drop .btn{margin-top:var(--s2)}
+.drop:has(input:focus-visible){outline:2px solid var(--strong);outline-offset:3px}
+@media (hover:hover) and (pointer:fine){.drop:hover .drop-icon{transform:translateY(-3px)}.drop:hover::before{border-color:var(--fill-hover)}}
+.drop:active .btn{transform:translateY(1px) scale(.97);transition-duration:.08s;box-shadow:var(--primary-shadow-down)}
+.dragging .drop{transform:scale(1.015)}
+.dragging .drop{box-shadow:inset 0 1px 0 var(--glass-edge),inset 0 0 0 2px var(--strong),var(--glass-shadow)}
+.dragging .drop-icon{transform:translateY(-8px) scale(1.06);background:var(--accent);color:var(--on-accent)}
+.over{display:none}
+.dragging .over{display:inline}.dragging .rest{display:none}
+@media (pointer:coarse){.drop .rest{display:none}.drop .touch{display:inline}.dragging .drop .touch{display:none}}
+.touch{display:none}
+
+.facts{list-style:none;margin:var(--s4) 0 0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3) var(--s4)}
+.facts li{display:grid;grid-template-columns:20px 1fr;column-gap:10px;align-items:start}
+.facts svg{width:16px;height:16px;margin-top:2px;color:var(--muted)}
+.facts span{color:var(--muted);font-size:14px;line-height:1.45;text-wrap:pretty}
+
+/* the card on the send and receive screens */
+.card{padding:var(--s4)}
+.file{display:flex;align-items:center;gap:14px;min-width:0}
+.tile{position:relative;width:48px;height:48px;flex:none;border-radius:12px;background:var(--fill);color:var(--strong);display:grid;place-items:center}
+.tile svg{width:22px;height:22px;grid-area:1/1;transition:opacity .25s var(--out),transform .45s var(--spring)}
+.tile .ok{opacity:0;transform:scale(.6)}
+.tile .ok path{stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset .4s var(--out) .1s}
+.done .tile{background:var(--accent);color:var(--on-accent)}
+.done .tile .doc{opacity:0;transform:scale(.6)}
+.done .tile .ok{opacity:1;transform:none}
+.done .tile .ok path{stroke-dashoffset:0}
+.file-text{display:flex;flex-direction:column;min-width:0}
+.file-text b{font-size:17px;font-weight:600;display:flex;min-width:0;white-space:nowrap}
+.file-text b span{overflow:hidden;text-overflow:ellipsis}
+.file-text b span+span{flex:none;overflow:visible}
+.file-text>span{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.waiting .file-text b{color:var(--muted);font-weight:500}
+.waiting .tile svg{animation:breathe 1.6s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.35}}
+
+.sendgrid{display:grid;grid-template-columns:1fr auto;gap:var(--s4);margin-top:var(--s4);padding-top:var(--s4);border-top:1px solid var(--rule)}
+.sendgrid>div{min-width:0}
+.label{display:block;color:var(--muted);font-size:14px;margin-bottom:var(--s2)}
+.linkrow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s2)}
+#link{display:block;width:100%;min-width:0;height:42px;padding:0 12px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--strong);font:500 15px var(--mono);
+  text-overflow:ellipsis;transition:background-color .2s var(--out)}
+@media (hover:hover) and (pointer:fine){#link:hover{background:var(--fill-hover)}}
+#link:focus-visible{outline-offset:2px}
+#copy{min-width:96px}
+#copy .ok{display:none}
+#copy.copied .ok{display:block;animation:pop .45s var(--spring)}
+#copy.copied .ic{display:none}
+#copy svg path{stroke-dasharray:24;stroke-dashoffset:0}
+#copy.copied .ok path{animation:draw .35s var(--out) both}
+@keyframes pop{from{transform:scale(.6)}}
+@keyframes draw{from{stroke-dashoffset:24}}
+#copied{flex:1 1 12em;margin-left:var(--s1);font-size:14px;color:var(--muted);line-height:1.4;text-wrap:pretty}
+#copied:empty{display:none}
+.done .sendgrid{display:none}
+#again{margin-top:var(--s4)}
+.keep{margin:var(--s4) 0 0;color:var(--muted);font-size:14px;text-wrap:pretty}
+
+#qr{margin:0;width:152px;display:flex;flex-direction:column;gap:var(--s2);animation:rise .6s var(--spring) both .1s}
+#qr svg{display:block;flex:none;width:152px;height:152px;border-radius:var(--r-in);box-shadow:0 0 0 1px var(--glass-rim),var(--press-shadow)}
+#qr small{color:var(--muted);font-size:13px;line-height:1.4}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+
+/* transfer rows: the beam */
+#xfers:not(:empty),#r-xfer:not(:empty){margin-top:var(--s4);padding-top:var(--s4);border-top:1px solid var(--rule)}
+.xfer{margin:0;display:grid;grid-template-columns:1fr auto;gap:var(--s2) var(--s3);align-items:baseline}
+.xfer+.xfer{margin-top:var(--s3)}
+.xfer b{font-weight:500;font-size:15px;min-width:0;text-wrap:pretty}
+.xfer>span{color:var(--muted);font:500 13px var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:pre}
+.beam{grid-column:1/-1;display:flex;align-items:center;gap:6px;height:12px}
+.beam::before,.beam::after{content:"";flex:none;width:12px;height:12px;border-radius:50%;background:var(--strong);transition:background-color .3s var(--out),transform .5s var(--spring)}
+.beam::after{background:transparent;box-shadow:inset 0 0 0 2px var(--muted)}
+.done .beam::after,.xfer[data-state=done] .beam::after{background:var(--strong);box-shadow:none;animation:land .6s var(--spring)}
+@keyframes land{0%{transform:scale(.5)}60%{transform:scale(1.35)}}
+.track{flex:1;display:block;height:6px;border-radius:3px;background:var(--fill-hover);overflow:hidden;position:relative}
+.track i{display:block;height:100%;width:100%;border-radius:inherit;background:var(--strong);transform-origin:left;transform:scaleX(0);transition:transform .35s var(--out)}
+.xfer[data-state=live] .track::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,oklch(100% 0 0 / .55),transparent);
+  transform:translateX(-100%);animation:sweep 1.4s linear infinite;mix-blend-mode:overlay}
+@keyframes sweep{to{transform:translateX(100%)}}
+.xfer[data-state=stop] .track i,.xfer[data-state=stop] .beam::before{background:var(--muted)}
+
+/* the status line */
+#msg{margin:var(--s3) 0 0;color:var(--text);font-size:15px;text-wrap:pretty;display:grid;grid-template-columns:20px 1fr;column-gap:10px;align-items:baseline}
+#msg:not([data-kind]){display:block}
+#msg:empty{display:none}
+#msg[data-kind]::before{content:"";justify-self:center;width:8px;height:8px;border-radius:50%;background:var(--muted);transform:translateY(-1px)}
+#msg[data-kind=wait]::before{background:var(--strong);animation:pulse 2s var(--out) infinite}
+#msg[data-kind=error]::before{background:var(--bad)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in oklch,var(--strong) 45%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
+#msg:has(button,a){display:flex;align-items:center;flex-wrap:wrap;gap:var(--s2) 12px;margin-top:var(--s4);color:var(--muted)}
+#msg:has(button,a)::before{display:none}
+@media (max-width:600px){#msg button,#msg a{flex:1;justify-content:center}}
+#msg button,#msg a{height:42px;padding:0 18px;white-space:nowrap;border-radius:var(--r-ctl);border:0;cursor:pointer;font-weight:500;font-size:15px;display:inline-flex;align-items:center;
+  text-decoration:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:transform .35s var(--spring),background-color .15s var(--out),box-shadow .25s var(--out)}
+#msg button:active,#msg a:active{transform:translateY(1px) scale(.97);transition-duration:.08s}
+
+/* receive */
+#go{width:100%;height:48px;margin-top:var(--s4);font-size:16px}
+#go svg{width:18px;height:18px}
+#r-note:not(:empty){display:block;margin-top:var(--s3);padding:12px 14px;border-radius:var(--r-in);background:var(--fill);color:var(--text);font-size:14px;line-height:1.5}
+
+/* privacy: a switch row under the card */
+#privacy{margin-top:var(--s4);padding-top:var(--s3);border-top:1px solid var(--rule)}
+.pref{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);cursor:pointer}
+.pref b{display:block;font-weight:500;font-size:15px}
+#hide-note{display:block;color:var(--muted);font-size:14px;line-height:1.45;margin-top:2px;text-wrap:pretty}
+#hide{appearance:none;-webkit-appearance:none;margin:0;position:relative;width:46px;height:28px;flex:none;border-radius:999px;cursor:pointer;background:var(--switch-off);
+  transition:background-color .25s var(--out);touch-action:manipulation}
+#hide::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:999px;background:oklch(100% 0 0);
+  box-shadow:0 1px 2px oklch(0% 0 0 / .25),0 3px 8px -2px oklch(0% 0 0 / .25);transition:transform .5s var(--spring),width .25s var(--out)}
+#hide:checked{background:var(--accent)}
+#hide:checked::after{background:var(--on-accent);transform:translateX(18px)}
+#hide:active::after{width:28px}
+#hide:checked:active::after{transform:translateX(12px)}
+#hide:disabled{opacity:.4;cursor:default}
+.pref:has(#hide:disabled){cursor:default}
+
+.foot{padding-block:var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));color:var(--muted);font-size:13px}
+.foot .wrap{display:flex;justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
+
+.spark{position:fixed;left:0;top:0;width:9px;height:9px;border-radius:50%;pointer-events:none;z-index:10}
+
+/* a screen's card arrives from where the drop zone was; nothing waits for it */
+#send .card,#recv .card{animation:arrive .55s var(--spring-soft) both}
+#privacy{animation:arrive .55s var(--spring-soft) .05s both}
+@keyframes arrive{from{opacity:0;transform:translateY(10px) scale(.98)}}
+
+@media (pointer:coarse){.btn,#msg button,#msg a,#link{height:44px}#go{height:52px}}
+@media (max-width:600px){
+  main{padding-block:var(--s4) var(--s5)}
+  .drop{margin-top:var(--s4);padding:var(--s4) var(--s3) var(--s4)}
+  .facts{grid-template-columns:1fr;gap:var(--s3)}
+  .card{padding:var(--s3)}
+  .foot .wrap{flex-direction:column;gap:var(--s1)}
+  .sendgrid{grid-template-columns:1fr}
+  #qr{width:auto;flex-direction:row;align-items:center;gap:var(--s3)}
+  #qr svg{width:132px;height:132px}
+}
+@media (max-width:400px){.bar small{display:none}}
+@media (max-width:600px){.xfer>span{grid-row:3;grid-column:1/-1;text-align:left}.linkrow .btn{flex:1}#copied{flex-basis:100%;margin:0}}
+@media (prefers-reduced-motion:reduce){
+  .light i,#msg[data-kind=wait]::before,.waiting .tile svg,.xfer[data-state=live] .track::after{animation:none !important}
+  *,*::before,*::after{animation-duration:.01ms !important;animation-delay:0s !important;transition-property:opacity,color,background-color,border-color,box-shadow !important}
+}
+</style>
+</head>
+<body>
+<div class="light" aria-hidden="true" data-craft-light><i></i><i></i><i></i></div>
+<div class="grain" aria-hidden="true" data-craft-light></div>
+
+<header class="bar">
+<div class="wrap">
+<a class="mark" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="6"/><path d="M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3" stroke-width="1.6"/></svg>Across</a>
+<small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg><span>Encrypted, browser to browser</span></small>
+</div>
+</header>
+
+<main class="wrap">
+<div class="glow" aria-hidden="true" data-craft-light></div>
+<section id="pick" hidden>
+<h1>Send a file, straight&nbsp;across.</h1>
+<p class="lead">From your browser to theirs, encrypted the whole way. No size limit, no&nbsp;account.</p>
+<label class="drop glass lit" for="file">
+<input type="file" id="file" class="vh" aria-label="Choose a file to send">
+<span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-5 5 5-5 5 5"/><path d="M4 15v2.5A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V15"/></svg></span>
+<span class="drop-title"><span class="rest">Drop a file here</span><span class="over">Let go to send it</span><span class="touch">Pick a file to send</span></span>
+<span class="drop-sub"><span class="rest">or pick one from your computer</span><span class="over">One file at a time</span><span class="touch">Photos, videos, anything</span></span>
+<span class="btn primary" aria-hidden="true">Choose a file</span>
+</label>
+<ul class="facts">
+<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg><span>Only someone with the link can open&nbsp;it.</span></li>
+<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14m-5-5 5 5-5 5"/></svg><span>Nothing is uploaded. It streams while you’re both&nbsp;here.</span></li>
+<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 5 6.5v5c0 4.3 3 7.7 7 9 4-1.3 7-4.7 7-9v-5z"/></svg><span id="ip-fact">Your IP address stays hidden from&nbsp;them.</span></li>
+</ul>
+</section>
+
+<section id="send" hidden>
+<div class="card glass lit">
+<div class="file"><span class="tile" aria-hidden="true"><svg class="doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6.5 3h7l4 4v12.5A1.5 1.5 0 0 1 16 21H6.5A1.5 1.5 0 0 1 5 19.5v-15A1.5 1.5 0 0 1 6.5 3Z"/><path d="M13 3v4.5h4.5"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+<span class="file-text"><b id="s-name"></b><span id="s-size"></span></span></div>
+<div class="sendgrid">
+<div>
+<label class="label" for="link">Send them this link</label>
+<input id="link" readonly spellcheck="false" autocomplete="off">
+<div class="linkrow"><button id="copy" class="btn primary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6A1.5 1.5 0 0 0 14 4.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Copy</span></button>
+<button id="share" class="btn ghost" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5m-4 4 4-4 4 4"/><path d="M8 10.5H6.5A1.5 1.5 0 0 0 5 12v7.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V12a1.5 1.5 0 0 0-1.5-1.5H16"/></svg>Share</button><small id="copied" aria-live="polite"></small></div>
+<p class="keep">Keep this page open until the download finishes. On a phone, keep it on&nbsp;screen.</p>
+</div>
+<p id="qr" hidden><small>Or scan it with the other device’s camera.</small></p>
+</div>
+<div id="xfers"></div>
+<a id="again" class="btn primary" href="./" hidden>Send another file</a>
+<p id="msg" role="status"></p>
+</div>
+</section>
+
+<section id="recv" hidden>
+<h1 class="small">Someone sent you a&nbsp;file.</h1>
+<p class="lead">Encrypted end to end, from their browser to yours. Nothing is kept on a server.</p>
+<div class="card glass lit waiting" id="r-card">
+<div class="file"><span class="tile" aria-hidden="true"><svg class="doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6.5 3h7l4 4v12.5A1.5 1.5 0 0 1 16 21H6.5A1.5 1.5 0 0 1 5 19.5v-15A1.5 1.5 0 0 1 6.5 3Z"/><path d="M13 3v4.5h4.5"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+<span class="file-text"><b id="r-name">Connecting…</b><span id="r-size">Waiting for the sender…</span></span></div>
+<button id="go" class="btn primary" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5"/><path d="M4 15v2.5A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V15"/></svg>Download</button>
+<small id="r-note"></small>
+<div id="r-xfer"></div>
+</div>
+</section>
+
+<div id="privacy" hidden><label class="pref" for="hide"><span><b>Hide my IP address</b><small id="hide-note"></small></span><input type="checkbox" id="hide" role="switch"></label></div>
+</main>
+
+<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><span>No account. No tracking.</span></div></footer>
+<script>
+'use strict';
+const STUN = ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'];
+const BLOCK = 8 << 20;     // file read size; next block is read while this one sends
+const CHUNK = 256 << 10;   // per data-channel message (capped by what the peer allows)
+const HIGH = 4 << 20, LOW = 1 << 20;
+const PROBE = 64 << 10;    // a block is compressed only if this much of it shrinks
+const ZMAX = 16 << 20;     // the largest compressed block a receiver accepts, before and after inflating
+const QUIET_MS = 250;      // gathering is done enough once no candidate has arrived for this long
+const GATHER_MS = 1500;    // by then, settle for a relay candidate without the server-reflexive one
+const GATHER_MAX_MS = 5000; // and by then for anything
+const RELAY_REUSE_MS = 3_600_000; // credentials last 8 hours, so a connection made with them has at least 7
+const RELAY_RETRY_MS = 30_000;
+const HELLO_MS = 8000, HELLOS = 15;
+const PROVE_MS = 20000, UNPROVEN = 8;
+const LOCAL_MS = 15000; // a local-only connection that hasn't proven itself by then isn't on the same network
+const RID = /^[a-z0-9]{16}$/;
+const BIG = 1e9; // past this, a browser that holds downloads in memory may run out
+
+const $ = (s) => document.querySelector(s);
+const enc = new TextEncoder();
+const hex = (b) => Array.from(new Uint8Array(b), (x) => x.toString(16).padStart(2, '0')).join('');
+// kind: 'wait' (a live dot), 'error' (a red dot) or nothing
+const say = (t, kind) => {
+  const m = $('#msg');
+  m.textContent = t;
+  if (t && kind) m.dataset.kind = kind;
+  else delete m.dataset.kind;
+};
+const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// a long name is cut in the middle, so the extension stays visible
+function named(el, name) {
+  const dot = /\.[^.\s]{1,6}$/.exec(name)?.index ?? name.length;
+  const head = Object.assign(document.createElement('span'), { textContent: name.slice(0, dot) });
+  el.replaceChildren(head, Object.assign(document.createElement('span'), { textContent: name.slice(dot) }));
+  el.title = name;
+}
+const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
+
+function rid(n) {
+  const abc = 'abcdefghijkmnpqrstuvwxyz23456789';
+  return Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => abc[b & 31]).join('');
+}
+
+function size(n) {
+  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  while (n >= 1000 && i < 4) { n /= 1000; i++; }
+  return `${i ? n.toFixed(n < 10 ? 1 : 0) : n} ${u[i]}`;
+}
+
+// ---- trust: the server only ever sees hash(secret), never the secret ----
+
+async function roomOf(secret) {
+  return hex(await crypto.subtle.digest('SHA-256', enc.encode('et-room|' + secret))).slice(0, 32);
+}
+
+// Proves knowledge of the secret, bound to this exact DTLS connection's
+// certificates. A server relaying two separate connections (a middleman) would
+// see different fingerprints on each side, so its proofs can't match.
+async function proof(secret, role, pc, local) {
+  const fp = (d) => d.sdp.match(/^a=fingerprint:\S+ (\S+)/m)[1].toUpperCase();
+  const mine = fp(pc.localDescription), theirs = fp(pc.remoteDescription);
+  const [s, r] = local === 's' ? [mine, theirs] : [theirs, mine];
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return hex(await crypto.subtle.sign('HMAC', key, enc.encode(`et1|${role}|${s}|${r}`)));
+}
+
+// ---- signaling: each browser long-polls its own mailbox on the server ----
+
+// Who may send each handshake message. The server is untrusted, so anything else is dropped.
+const SIGNALS = { hello: { from: 'r', sdp: false }, offer: { from: 's', sdp: true }, answer: { from: 'r', sdp: true } };
+
+function parseSignal(env) {
+  const t = env?.data?.t;
+  const kind = Object.hasOwn(SIGNALS, t) && SIGNALS[t];
+  if (!kind || (kind.from === 's' ? env.from !== 's' : !RID.test(env.from))) return null;
+  if (!kind.sdp) return { from: env.from, t };
+  const desc = (d) => (d?.type === t && typeof d.sdp === 'string' ? { type: t, sdp: d.sdp } : null);
+  const sdp = desc(env.data.sdp);
+  return sdp && { from: env.from, t, sdp, lan: desc(env.data.lan) };
+}
+
+function signaling(room, me, onSignal) {
+  const ctl = new AbortController();
+  addEventListener('pagehide', () => ctl.abort());
+  (async () => {
+    for (let wait = 1000; !ctl.signal.aborted;) {
+      try {
+        const r = await fetch(`api/signal?room=${room}&me=${me}`, { signal: ctl.signal });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const list = await r.json();
+        if (ctl.signal.aborted) return;
+        for (const env of Array.isArray(list) ? list : []) {
+          const m = parseSignal(env);
+          if (m) onSignal(m);
+        }
+        wait = 1000;
+      } catch {
+        if (ctl.signal.aborted) return;
+        await sleep(wait);
+        wait = Math.min(wait * 2, 10_000);
+      }
+    }
+  })();
+  return {
+    post: (to, data) => fetch('api/signal', { method: 'POST', body: JSON.stringify({ room, from: me, to, data }) }).catch(() => {}),
+    stop: () => ctl.abort(),
+  };
+}
+
+// ---- privacy: each browser alone decides whether the other side may learn its IP address ----
+
+const NO_RELAY = 'no relay';
+const relayNote = () => relay.busyUntil > Date.now()
+  ? `The private relay is busy for your network for about ${Math.ceil((relay.busyUntil - Date.now()) / 60000)} more min.`
+  : relay.servers.length ? "The other person can't reach the private relay right now." : 'The private relay is unavailable.';
+const LOCAL_ONLY = () => `${relayNote()} Connecting over your local network instead, which works only on the same Wi-Fi.`;
+const RELAY_DOWN = () => `Couldn't connect without showing your IP. ${relayNote()} Until then, hidden mode works only on the same Wi-Fi. ` +
+  'Try again later, or turn off Hide my IP address (the other person will then see your IP address).';
+const note = () => {
+  $('#ip-fact').textContent = hide ? 'Your IP address stays hidden from\u00a0them.' : 'Your IP address is visible to them. You can change this below.';
+  note.text();
+};
+note.text = () => ($('#hide-note').textContent = hide
+  ? 'They won’t see it. Off the same Wi-Fi, an encrypted relay carries the file and can’t read it.'
+  : 'They can see it. A direct connection is often faster.');
+
+let hide = true;
+try { hide = localStorage.getItem('hide-ip') !== '0'; } catch {}
+
+function privacyBox(onChange) {
+  const box = $('#hide');
+  box.checked = hide;
+  note();
+  $('#privacy').hidden = false;
+  box.onchange = () => {
+    hide = box.checked;
+    note();
+    try { localStorage.setItem('hide-ip', hide ? '1' : '0'); } catch {}
+    onChange();
+  };
+}
+
+const turnServers = (list) => (Array.isArray(list) ? list : []).flatMap((s) => {
+  const urls = [s?.urls].flat().filter((u) => typeof u === 'string' && /^turns?:/.test(u) && !/:53(\?|$)/.test(u));
+  return urls.length && typeof s.username === 'string' && typeof s.credential === 'string'
+    ? [{ urls, username: s.username, credential: s.credential }] : [];
+});
+
+// TURN servers from /api/ice, or [] while the relay is unavailable. busyUntil is when this network may
+// ask again after hitting its hourly limit.
+let relay = { at: -Infinity, servers: [], busyUntil: 0 };
+function relayServers() {
+  const wait = relay.busyUntil ? relay.busyUntil - relay.at : relay.servers.length ? RELAY_REUSE_MS : RELAY_RETRY_MS;
+  if (Date.now() - relay.at < wait) return relay.servers;
+  return (relay.pending ??= fetch('api/ice', { cache: 'no-store' })
+    .then(async (r) => {
+      const body = await r.json().catch(() => null);
+      const retry = r.status === 429 && Number.isFinite(body?.retry) ? Math.min(Math.max(body.retry, 0), 3600) : 0;
+      return { servers: r.ok ? turnServers(body?.iceServers) : [], busyUntil: retry && Date.now() + retry * 1000 };
+    }, () => ({ servers: [], busyUntil: 0 }))
+    .then(({ servers, busyUntil }) => (relay = { at: Date.now(), servers, busyUntil }).servers));
+}
+
+// Hidden: relay candidates only, so nothing this browser sends carries its address.
+// Shown: direct when possible, with the relay for networks where direct fails.
+// LAN: hidden while the relay is unavailable. Only the local link remains, so it connects only on
+// the same network, and still sends no address.
+async function rtcConfig(hidden) {
+  const turn = await relayServers();
+  if (hidden) return turn.length ? { iceTransportPolicy: 'relay', iceServers: turn } : LAN;
+  return { iceTransportPolicy: 'all', iceServers: [{ urls: STUN }, ...turn] };
+}
+
+// The browser's relay-only policy is the guarantee; this refuses to send anything else in case
+// it fails, and blanks the related address, which some browsers fill with the local one.
+function relayOnly(sdp) {
+  const lines = sdp.split('\r\n').map((line) => {
+    if (!line.startsWith('a=candidate:')) return line;
+    const f = line.split(' ');
+    if (f[6] !== 'typ' || f[7] !== 'relay') throw new Error(NO_RELAY);
+    const at = f.indexOf('raddr');
+    if (at > 0) f.splice(at, 4, 'raddr', '0.0.0.0', 'rport', '0');
+    return f.join(' ');
+  });
+  if (!lines.some((l) => l.startsWith('a=candidate:'))) throw new Error(NO_RELAY);
+  return lines.join('\r\n');
+}
+
+// The local link: a second connection with no servers, alongside the main one, for when both
+// browsers are on the same network. Browsers name their own addresses with random .local names
+// that resolve only on that network. Both sides keep only those, in what they send and in what
+// they accept: a peer that slipped in a real address would get this link to send to it directly.
+const LAN = { iceServers: [] };
+const LAN_GRACE_MS = 1000; // how long a proven main link waits for the local one, which is far faster
+const LOCAL = /^[0-9a-f-]{36}\.local$/i;
+const candidates = (sdp) => sdp.split('\r\n').filter((l) => l.startsWith('a=candidate:')).length;
+// a description whose every candidate is a .local name: the other side has no relay either
+const allLocal = (sdp) => candidates(sdp) > 0 && candidates(onlyLocal(sdp)) === candidates(sdp);
+function localOnly(sdp) {
+  const lines = onlyLocal(sdp);
+  return candidates(lines) ? lines : null;
+}
+// the same, keeping a description with no candidates left
+function onlyLocal(sdp) {
+  // the connection line names a default address; nothing here should depend on the browser leaving it blank
+  const lines = sdp.split('\r\n').map((l) => (l.startsWith('c=') ? 'c=IN IP4 0.0.0.0' : l)).filter((line) => {
+    if (!line.startsWith('a=candidate:')) return true;
+    const f = line.split(' ');
+    // a host candidate has no related address, so one that names any is refused too
+    return f[6] === 'typ' && f[7] === 'host' && LOCAL.test(f[4]) && !f.includes('raddr');
+  });
+  return lines.join('\r\n');
+}
+
+// Non-trickle ICE: the SDP carries every candidate, so a handshake is three messages.
+// Waits for a relay candidate when there is a relay, since it is what rescues blocked networks, and
+// for a server-reflexive one when the connection may go direct. Gathering rarely reports complete:
+// some relay addresses never answer. Every candidate that matters arrives within a few hundred ms.
+async function describe(pc) {
+  await pc.setLocalDescription();
+  const { iceTransportPolicy, iceServers = [] } = pc.getConfiguration();
+  const urls = iceServers.flatMap((s) => [s.urls].flat());
+  const turn = urls.some((u) => /^turns?:/.test(u));
+  const want = [turn && ' typ relay', iceTransportPolicy !== 'relay' && urls.some((u) => /^stun:/.test(u)) && ' typ srflx'].filter(Boolean);
+  await new Promise((ok) => {
+    let late = false, quiet = false, timer;
+    const has = (t) => pc.localDescription.sdp.includes(t);
+    const check = () => (pc.iceGatheringState === 'complete' || (quiet && (want.every(has) ||
+      (late && (!turn || has(' typ relay')))))) && ok();
+    pc.addEventListener('icecandidate', () => {
+      quiet = false;
+      clearTimeout(timer);
+      timer = setTimeout(() => { quiet = true; check(); }, QUIET_MS);
+    });
+    pc.addEventListener('icegatheringstatechange', check);
+    setTimeout(() => { late = true; quiet = true; check(); }, GATHER_MS);
+    setTimeout(ok, GATHER_MAX_MS);
+    check();
+  });
+  const { type, sdp } = pc.localDescription;
+  return { type, sdp: iceTransportPolicy === 'relay' ? relayOnly(sdp) : sdp };
+}
+
+// null when this browser has no .local names to offer, so there is no local link
+async function describeLan(pc) {
+  const { type, sdp } = await describe(pc);
+  const lan = localOnly(sdp);
+  return lan && { type, sdp: lan };
+}
+
+// ---- data channel control messages; the other browser is untrusted too ----
+
+// A name can carry controls that disguise it: U+202E shows "invoice\u202Efdp.exe" as "invoiceexe.pdf".
+function cleanName(name) {
+  const clean = name.replace(/[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+    .replace(/[\/\\]/g, '_').trim();
+  return Array.from(clean).slice(0, 255).join('') || 'file';
+}
+
+const CONTROLS = {
+  hi: (m) => typeof m.p === 'string' && { t: 'hi', p: m.p },
+  meta: (m) => typeof m.name === 'string' && Number.isSafeInteger(m.size) && m.size >= 0 &&
+    { t: 'meta', name: cleanName(m.name), size: m.size },
+  start: (m) => ({ t: 'start', z: m.z === 1 }),
+  z: (m) => [m.n, m.raw].every((v) => Number.isSafeInteger(v) && v > 0 && v <= ZMAX) && { t: 'z', n: m.n, raw: m.raw },
+  cancel: () => ({ t: 'cancel' }),
+  done: () => ({ t: 'done' }),
+  got: () => ({ t: 'got' }),
+};
+
+function parseControl(data, allowed) {
+  let m;
+  try { m = JSON.parse(data); } catch { return null; }
+  return (allowed.includes(m?.t) && CONTROLS[m.t](m)) || null;
+}
+
+// a transfer row: what's happening, the numbers, and a bar
+// state: 'live' while bytes flow, 'done', 'stop', or nothing while waiting
+function view(parent) {
+  const label = document.createElement('b'), stats = document.createElement('span');
+  const beam = document.createElement('i'), track = document.createElement('i'), fill = document.createElement('i');
+  const el = Object.assign(document.createElement('p'), { className: 'xfer' });
+  beam.className = 'beam';
+  track.className = 'track';
+  track.append(fill);
+  beam.append(track);
+  el.append(label, stats, beam);
+  parent.append(el);
+  let samples = [], title;
+  return {
+    label(t, state) {
+      label.textContent = t;
+      if (state) el.dataset.state = state;
+      else delete el.dataset.state;
+    },
+    remove: () => el.remove(),
+    focus() {
+      el.tabIndex = -1;
+      el.focus({ preventScroll: true });
+    },
+    set(n, total) {
+      const now = performance.now();
+      samples.push([now, n]);
+      while (samples.length > 2 && now - samples[0][0] > 2000) samples.shift();
+      const [t0, n0] = samples[0];
+      const bps = now > t0 ? ((n - n0) * 1000) / (now - t0) : 0;
+      fill.style.transform = `scaleX(${total ? Math.min(1, n / total) : 1})`;
+      title ??= document.title;
+      document.title = el.dataset.state === 'live' && total ? `${Math.floor((n / total) * 100)}% · ${title}` : title;
+      // an empty file is "done" only once it's been received, not while it waits
+      stats.textContent = n >= total && (total || el.dataset.state === 'done') ? `${size(total)}, done` : `${Math.floor((n / total) * 100)}%  ${size(n)} of ${size(total)}${bps ? `  ${size(bps)}/s` : ''}`;
+    },
+  };
+}
+
+// a short burst of dots from an element, for a transfer that finished
+function burst(from) {
+  if (still()) return;
+  const r = from.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const tones = ['--strong', '--text', '--muted'].map((t) => getComputedStyle(document.documentElement).getPropertyValue(t));
+  for (let i = 0; i < 20; i++) {
+    const s = Object.assign(document.createElement('i'), { className: 'spark' });
+    s.style.background = tones[0];
+    document.body.append(s);
+    const a = (i / 20) * Math.PI * 2 + Math.random() * 0.4, d = 60 + Math.random() * 80;
+    s.animate([
+      { transform: `translate(${x - 4}px, ${y - 4}px) scale(1)`, opacity: 1 },
+      { transform: `translate(${x - 4 + Math.cos(a) * d * 0.8}px, ${y - 4 + Math.sin(a) * d * 0.8 + 6}px) scale(.9)`, opacity: 1, offset: 0.6 },
+      { transform: `translate(${x - 4 + Math.cos(a) * d}px, ${y - 4 + Math.sin(a) * d + 14}px) scale(.5)`, opacity: 0 },
+    ], { duration: 800 + Math.random() * 400, easing: 'cubic-bezier(.23, 1, .32, 1)' }).onfinish = () => s.remove();
+  }
+}
+
+// said to screen readers; the finished bar already shows it
+const spoken = (t) => Object.assign(document.createElement('span'), { className: 'vh', textContent: t });
+
+function celebrate(card) {
+  card.classList.add('done');
+  burst(card.querySelector('.tile'));
+}
+
+// ---- getting the link to the other device ----
+
+// The clipboard API is refused in some browsers and embedded views, so the older copy command is the
+// fallback. The text is selected first either way, which leaves it ready to copy by hand if both fail.
+async function copy(input) {
+  const pick = () => input.setSelectionRange(0, input.value.length); // iOS ignores select() on a read-only box
+  input.focus();
+  pick();
+  try {
+    await navigator.clipboard.writeText(input.value);
+    return true;
+  } catch {
+    pick();
+    try { return document.execCommand('copy'); } catch { return false; }
+  }
+}
+
+// A phone that locks its screen suspends the page, and with it the transfer.
+let awake = false, wake = null;
+async function lock() {
+  if (!awake || wake || document.visibilityState !== 'visible' || !navigator.wakeLock) return;
+  wake = 'pending';
+  try {
+    wake = await navigator.wakeLock.request('screen');
+    wake.onrelease = () => (wake = null);
+    if (!awake) wake.release();
+  } catch {
+    wake = null;
+  }
+}
+function stayAwake(on) {
+  awake = on;
+  if (on) lock();
+  else if (wake && wake !== 'pending') wake.release();
+}
+document.addEventListener('visibilitychange', lock);
+
+// A QR code of text as an SVG element: byte mode, error correction level L, versions 1 to 6
+// (up to 134 bytes), or null when the text is longer.
+// [data codewords per block, blocks, error correction codewords per block], by version
+const QR_L = [[19, 1, 7], [34, 1, 10], [55, 1, 15], [80, 1, 20], [108, 1, 26], [68, 2, 18]];
+function qr(text) {
+  const bytes = enc.encode(text);
+  const v = QR_L.findIndex(([d, b]) => d * b * 8 >= 12 + bytes.length * 8) + 1;
+  if (!v) return null;
+  const [per, blocks, ecn] = QR_L[v - 1];
+
+  const bits = [];
+  const put = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
+  put(4, 4);
+  put(bytes.length, 8);
+  for (const b of bytes) put(b, 8);
+  put(0, Math.min(4, per * blocks * 8 - bits.length));
+  while (bits.length % 8) bits.push(0);
+  const data = [];
+  for (let i = 0; i < bits.length; i += 8) data.push(bits.slice(i, i + 8).reduce((a, b) => (a << 1) | b));
+  for (let pad = 0xec; data.length < per * blocks; pad ^= 0xec ^ 0x11) data.push(pad);
+
+  // Reed-Solomon over GF(256) with the generator (x - a^0)...(x - a^(ecn-1)), highest degree first
+  const exp = new Uint8Array(512), log = new Uint8Array(256);
+  for (let i = 0, x = 1; i < 255; i++, x = (x << 1) ^ (x & 0x80 ? 0x11d : 0)) [exp[i], log[x]] = [x, i];
+  for (let i = 255; i < 512; i++) exp[i] = exp[i - 255];
+  const mul = (a, b) => (a && b ? exp[log[a] + log[b]] : 0);
+  let gen = [1];
+  for (let i = 0; i < ecn; i++) {
+    const next = new Array(gen.length + 1).fill(0);
+    gen.forEach((g, j) => { next[j] ^= g; next[j + 1] ^= mul(g, exp[i]); });
+    gen = next;
+  }
+  const ecOf = (block) => {
+    const r = new Array(ecn).fill(0);
+    for (const b of block) {
+      const f = b ^ r.shift();
+      r.push(0);
+      for (let j = 0; j < ecn; j++) r[j] ^= mul(gen[j + 1], f);
+    }
+    return r;
+  };
+  const split = Array.from({ length: blocks }, (_, i) => data.slice(i * per, (i + 1) * per));
+  const ecs = split.map(ecOf);
+  const words = [];
+  for (let i = 0; i < per; i++) for (const b of split) words.push(b[i]);
+  for (let i = 0; i < ecn; i++) for (const e of ecs) words.push(e[i]);
+
+  const n = 17 + 4 * v, dark = new Uint8Array(n * n), fixed = new Uint8Array(n * n);
+  const set = (x, y, d) => { dark[y * n + x] = d ? 1 : 0; fixed[y * n + x] = 1; };
+  for (const [fx, fy] of [[0, 0], [n - 7, 0], [0, n - 7]]) {
+    for (let dy = -1; dy <= 7; dy++) {
+      for (let dx = -1; dx <= 7; dx++) {
+        const ring = Math.max(Math.abs(dx - 3), Math.abs(dy - 3));
+        if (fx + dx >= 0 && fy + dy >= 0 && fx + dx < n && fy + dy < n) set(fx + dx, fy + dy, ring !== 2 && ring !== 4);
+      }
+    }
+  }
+  for (let i = 8; i < n - 8; i++) {
+    set(i, 6, i % 2 === 0);
+    set(6, i, i % 2 === 0);
+  }
+  if (v > 1) {
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(n - 7 + dx, n - 7 + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+  }
+  const format = (mask) => {
+    const d = (1 << 3) | mask; // level L is 01
+    let r = d;
+    for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+    const f = ((d << 10) | r) ^ 0x5412, bit = (i) => (f >>> i) & 1;
+    for (let i = 0; i <= 5; i++) set(8, i, bit(i));
+    set(8, 7, bit(6));
+    set(8, 8, bit(7));
+    set(7, 8, bit(8));
+    for (let i = 9; i < 15; i++) set(14 - i, 8, bit(i));
+    for (let i = 0; i < 8; i++) set(n - 1 - i, 8, bit(i));
+    for (let i = 8; i < 15; i++) set(8, n - 15 + i, bit(i));
+    set(8, n - 8, 1);
+  };
+  format(0);
+
+  let k = 0;
+  for (let right = n - 1; right >= 1; right -= 2) {
+    if (right === 6) right = 5;
+    for (let vert = 0; vert < n; vert++) {
+      for (let j = 0; j < 2; j++) {
+        const x = right - j, y = ((right + 1) & 2) === 0 ? n - 1 - vert : vert;
+        if (fixed[y * n + x]) continue;
+        dark[y * n + x] = k < words.length * 8 ? (words[k >> 3] >>> (7 - (k & 7))) & 1 : 0;
+        k++;
+      }
+    }
+  }
+
+  const MASKS = [(x, y) => (x + y) % 2, (x, y) => y % 2, (x) => x % 3, (x, y) => (x + y) % 3,
+    (x, y) => (Math.floor(y / 2) + Math.floor(x / 3)) % 2, (x, y) => ((x * y) % 2) + ((x * y) % 3),
+    (x, y) => (((x * y) % 2) + ((x * y) % 3)) % 2, (x, y) => (((x + y) % 2) + ((x * y) % 3)) % 2];
+  const flip = (mask) => {
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!fixed[y * n + x] && !MASKS[mask](x, y)) dark[y * n + x] ^= 1;
+  };
+  // the standard's penalty, so the chosen mask avoids patterns that confuse scanners
+  const penalty = () => {
+    let p = 0, total = 0;
+    const at = (x, y) => dark[y * n + x];
+    for (const line of [(i, j) => at(j, i), (i, j) => at(i, j)]) {
+      for (let i = 0; i < n; i++) {
+        let run = 1, seq = '';
+        for (let j = 0; j < n; j++) {
+          seq += line(i, j);
+          if (j && line(i, j) === line(i, j - 1)) run++;
+          else run = 1;
+          if (run === 5) p += 3;
+          else if (run > 5) p++;
+        }
+        p += 40 * (seq.match(/(?=10111010000|00001011101)/g) || []).length;
+      }
+    }
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        total += at(x, y);
+        if (x < n - 1 && y < n - 1 && at(x, y) === at(x + 1, y) && at(x, y) === at(x, y + 1) && at(x, y) === at(x + 1, y + 1)) p += 3;
+      }
+    }
+    return p + 10 * Math.floor(Math.abs((total * 100) / (n * n) - 50) / 5);
+  };
+  let best = 0, least = Infinity;
+  for (let mask = 0; mask < 8; mask++) {
+    flip(mask);
+    format(mask);
+    const p = penalty();
+    if (p < least) [best, least] = [mask, p];
+    flip(mask);
+  }
+  flip(best);
+  format(best);
+
+  // dark on white whatever the theme: not every scanner reads a light-on-dark code
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
+  svg.setAttribute('viewBox', `-4 -4 ${n + 8} ${n + 8}`);
+  svg.setAttribute('shape-rendering', 'crispEdges');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', 'QR code of the link');
+  const back = document.createElementNS(NS, 'rect');
+  for (const [attr, val] of [['x', -4], ['y', -4], ['width', n + 8], ['height', n + 8], ['fill', '#fff']]) back.setAttribute(attr, val);
+  let d = '';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (dark[y * n + x]) d += `M${x} ${y}h1v1h-1z`;
+  path.setAttribute('d', d);
+  path.setAttribute('fill', '#000');
+  svg.append(back, path);
+  return svg;
+}
+
+// ================= sender =================
+
+function pickFile() {
+  $('#pick').hidden = false;
+  $('.drop').after($('#msg'));
+  privacyBox(() => {});
+  $('#file').onchange = (e) => e.target.files[0] && send(e.target.files[0]);
+  // dropping a file anywhere on the page works too, and the drop zone rises to meet it
+  let over = 0;
+  const lift = (on) => document.body.classList.toggle('dragging', on && !$('#pick').hidden);
+  addEventListener('dragenter', (e) => e.dataTransfer?.types.includes('Files') && ++over && lift(true));
+  addEventListener('dragleave', () => (over = Math.max(0, over - 1)) || lift(false));
+  addEventListener('drop', (e) => {
+    over = 0;
+    lift(false);
+    if ($('#pick').hidden) return;
+    const items = [...e.dataTransfer.items].filter((i) => i.kind === 'file');
+    if (items.length > 1) return say('One file at a time. To send several, zip them into one file first.', 'error');
+    // a dropped folder arrives as a file that can't be read
+    if (items[0]?.webkitGetAsEntry?.()?.isDirectory) return say("Folders can't be sent. Zip the folder into one file first.", 'error');
+    if (e.dataTransfer.files[0]) send(e.dataTransfer.files[0]);
+  });
+}
+
+async function send(file) {
+  $('#pick').hidden = true;
+  $('#send').hidden = false;
+  $('#send .card').append($('#msg'));
+  named($('#s-name'), cleanName(file.name));
+  $('#s-size').textContent = size(file.size);
+  // leaving mid-transfer would cut it off; once a file is received, nothing is lost
+  let delivered = false;
+  addEventListener('beforeunload', (e) => !delivered && e.preventDefault());
+
+  stayAwake(true);
+
+  const secret = rid(20);
+  const link = `${location.origin}${location.pathname}#${secret}`;
+  const box = $('#link');
+  box.value = link;
+  box.onfocus = () => box.select();
+  let copied;
+  $('#copy').onclick = async () => {
+    const ok = await copy(box);
+    if (ok) $('#copy').focus(); // copying selected the field; keyboard users stay on the button
+    $('#copied').textContent = ok ? 'Copied.'
+      : matchMedia('(pointer: coarse)').matches ? 'Copying was blocked. Touch and hold the link in the box, then choose Copy.'
+        : `Copying was blocked. The link is selected: press ${/Mac/.test(navigator.userAgent) ? '⌘' : 'Ctrl'}+C.`;
+    $('#copy').classList.toggle('copied', ok);
+    $('#copy span').textContent = ok ? 'Copied' : 'Copy';
+    clearTimeout(copied);
+    if (ok) copied = setTimeout(() => {
+      $('#copied').textContent = '';
+      $('#copy').classList.remove('copied');
+      $('#copy span').textContent = 'Copy';
+    }, 2000);
+  };
+  if (navigator.share) {
+    $('#share').hidden = false;
+    $('#share').onclick = () => navigator.share({ url: link }).catch((err) =>
+      err.name !== 'AbortError' && ($('#copied').textContent = "Sharing didn't work here. Use Copy instead."));
+  }
+  const code = qr(link);
+  if (code) {
+    $('#qr').prepend(code);
+    $('#qr').hidden = false;
+  }
+  say('Waiting for the other side to open the link…', 'wait');
+
+  // receiver id -> { id, pc, state, offer, timer }
+  // state: offering -> offered -> connecting -> verified, or closed.
+  // blocked: hidden and the relay is unavailable, so nothing was created or sent.
+  const peers = new Map();
+  const unproven = () => [...peers.values()].filter((p) => p.state !== 'verified').length;
+  const sig = signaling(await roomOf(secret), 's', (m) => {
+    const p = peers.get(m.from);
+    if (m.t === 'hello' && !p && unproven() < UNPROVEN) connect(m.from);
+    else if (m.t === 'hello' && p?.state === 'offered') sig.post(m.from, p.offer);
+    else if (m.t === 'answer' && p?.state === 'offered' && p.pc.signalingState === 'have-local-offer') {
+      p.state = 'connecting';
+      const main = p.local ? localOnly(m.sdp.sdp) : m.sdp.sdp;
+      if (!main) return drop(p);
+      p.pc.setRemoteDescription({ type: 'answer', sdp: main }).catch(() => drop(p));
+      const lan = m.lan && localOnly(m.lan.sdp);
+      if (p.lan && lan) p.lan.setRemoteDescription({ type: 'answer', sdp: lan }).catch(() => p.lan?.close());
+      else {
+        p.lan?.close();
+        p.lan = null;
+      }
+    }
+  });
+
+  // Peers that haven't exchanged descriptions yet start over with the new choice. The rest
+  // keep theirs: the other side already has those addresses.
+  privacyBox(() => {
+    for (const p of [...peers.values()]) {
+      if (p.state === 'offering' || p.state === 'offered' || p.state === 'blocked') {
+        drop(p);
+        connect(p.id);
+      }
+    }
+    status();
+  });
+  status();
+
+  // the relay is asked for a pass only once someone opens the link, since each network gets a few an hour
+  function status() {
+    const idle = ![...peers.values()].some((p) => p.state === 'verified');
+    say(idle ? 'Waiting for the other side to open the link…' : '', 'wait');
+  }
+
+  function drop(p) {
+    p.state = 'closed';
+    clearTimeout(p.timer);
+    p.pc?.close();
+    p.lan?.close();
+    if (peers.get(p.id) === p) peers.delete(p.id);
+  }
+
+  async function connect(id) {
+    const p = { id, state: 'offering' };
+    peers.set(id, p);
+    p.timer = setTimeout(() => {
+      if (p.local && p.state !== 'verified') say(RELAY_DOWN(), 'error');
+      drop(p);
+    }, PROVE_MS);
+    const config = await rtcConfig(hide);
+    if (p.state !== 'offering') return;
+    // without a relay, the main connection is itself a local link and there is no second one
+    p.local = config === LAN;
+    if (p.local) say(LOCAL_ONLY());
+    p.pc = new RTCPeerConnection(config);
+    p.lan = p.local ? null : new RTCPeerConnection(LAN);
+    // Each connection is a link; the first proven one carries the file and the other is closed.
+    let pc, dc, row, started = false, finished = false;
+    for (const conn of [p.pc, p.lan]) if (conn) link(conn);
+
+    function link(conn) {
+      const ch = conn.createDataChannel('f');
+      ch.binaryType = 'arraybuffer';
+      ch.bufferedAmountLowThreshold = LOW;
+      ch.onopen = async () => ch.send(JSON.stringify({ t: 'hi', p: await proof(secret, 's', conn, 's') }));
+      let queue = Promise.resolve();
+      ch.onmessage = (e) => {
+        const m = parseControl(e.data, ['hi', 'start', 'cancel', 'got']);
+        if (!m) return drop(p);
+        queue = queue.then(() => onControl(m, conn, ch)).catch(() => drop(p));
+      };
+      ch.onclose = () => {
+        if (conn !== pc) {
+          if (conn === p.lan) p.lan = null; // the local link failed; the main one needn't wait for it
+          return;
+        }
+        drop(p);
+        if (!row || finished) return;
+        if (started) return row.label('Disconnected.', 'stop');
+        // they left before pressing Download, or reconnected to change their privacy setting
+        row.remove();
+        status();
+      };
+    }
+
+    function choose(conn, ch) {
+      if (pc || p.state === 'closed') return;
+      [pc, dc] = [conn, ch];
+      (conn === p.pc ? p.lan : p.pc)?.close();
+      [p.pc, p.lan] = [conn, null];
+      clearTimeout(p.timer);
+      p.state = 'verified';
+      say('');
+      // they already have this connection's addresses, so the setting is fixed from here
+      $('#hide').disabled = true;
+      row = view($('#xfers'));
+      row.label('Connected. Waiting for them to press Download.');
+      row.set(0, file.size);
+      dc.send(JSON.stringify({ t: 'meta', name: file.name, size: file.size }));
+    }
+
+    async function onControl(m, conn, ch) {
+      if (conn !== pc) {
+        // nothing is accepted before the proof, and nothing more on a link that wasn't chosen
+        if (pc || m.t !== 'hi' || m.p !== await proof(secret, 'r', conn, 's')) return pc ? undefined : drop(p);
+        if (conn === p.lan || !p.lan) return choose(conn, ch);
+        setTimeout(() => choose(conn, ch), LAN_GRACE_MS);
+      } else if (m.t === 'start' && !started) {
+        started = true;
+        row.label('Sending', 'live');
+        // progress is measured here, not reported back: traffic flowing the
+        // other way mid-transfer makes Chrome's data channels stall for ~20s
+        // n counts file bytes; scale turns buffered wire bytes back into file bytes
+        const sent = { n: 0, scale: 1 };
+        const shown = () => Math.min(file.size, Math.max(0, sent.n - dc.bufferedAmount * sent.scale));
+        const tick = setInterval(() => !finished && row.set(shown(), file.size), 300);
+        pump(dc, file, Math.min(CHUNK, pc.sctp?.maxMessageSize || CHUNK), sent, m.z)
+          .catch(() => !finished && row.label('Stopped.', 'stop'))
+          .finally(() => !finished && clearInterval(tick));
+        dc.addEventListener('close', () => clearInterval(tick));
+      } else if (m.t === 'got') {
+        finished = true;
+        stayAwake(false); // the usual case is one receiver; a later one still connects, only the screen may sleep
+        row.label('Received.', 'done');
+        row.set(file.size, file.size);
+        celebrate($('#send .card'));
+        delivered = true;
+        $('#again').hidden = false;
+      } else if (m.t === 'cancel') {
+        finished = true;
+        row.label('Cancelled by the receiver.', 'stop');
+      }
+    }
+
+    Promise.all([p.local ? describeLan(p.pc) : describe(p.pc), p.lan && describeLan(p.lan)]).then(([sdp, lan]) => {
+      if (p.state !== 'offering') return;
+      if (!sdp) {
+        // hidden, no relay, and no .local names to offer either
+        p.pc.close();
+        p.state = 'blocked';
+        return say(RELAY_DOWN(), 'error');
+      }
+      if (!lan && p.lan) {
+        p.lan.close();
+        p.lan = null;
+      }
+      p.offer = lan ? { t: 'offer', sdp, lan } : { t: 'offer', sdp };
+      p.state = 'offered';
+      sig.post(id, p.offer);
+    }, (err) => {
+      if (p.state !== 'offering') return;
+      drop(p);
+      if (err.message === NO_RELAY) say(RELAY_DOWN());
+    });
+  }
+}
+
+// Older browsers (Safari before 16.4, Firefox before 113) can't compress this way, so they neither ask
+// for compressed blocks nor send them.
+const ZIP = (() => {
+  try {
+    new CompressionStream('deflate-raw');
+    new DecompressionStream('deflate-raw');
+    return true;
+  } catch {
+    return false;
+  }
+})();
+
+const deflate = async (bytes) =>
+  new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+
+// Each block goes out raw, or deflated (announced by a z message) when the receiver accepts that, a
+// sample of the block shrinks, and the link isn't faster than the compressor. Most links are slower
+// than deflate, so text, logs, archives and raw images cross them several times faster. The next
+// block is read and compressed while this one sends.
+async function pump(dc, file, chunk, sent, zip) {
+  let zipRate = 0, linkRate = 0, wire = 0;
+  // sampled only while the buffer stays non-empty, so it times the link, not this page waiting on itself
+  let last = { at: performance.now(), drained: 0, buffered: 0 };
+  const sampler = setInterval(() => {
+    const at = performance.now(), buffered = dc.bufferedAmount, drained = wire - buffered;
+    if (last.buffered > 0 && buffered > 0) {
+      const rate = ((drained - last.drained) * 1000) / (at - last.at);
+      linkRate = linkRate ? linkRate * 0.7 + rate * 0.3 : rate;
+    }
+    last = { at, drained, buffered };
+  }, 250);
+
+  async function prepare(at) {
+    const raw = new Uint8Array(await file.slice(at, at + BLOCK).arrayBuffer());
+    if (!zip || !ZIP || (zipRate && linkRate > zipRate * 0.9)) return { raw };
+    const probe = raw.subarray(0, PROBE);
+    if ((await deflate(probe)).length > probe.length * 0.9) return { raw };
+    const t = performance.now();
+    const packed = await deflate(raw);
+    zipRate = (raw.length * 1000) / (performance.now() - t);
+    return packed.length < raw.length * 0.9 ? { raw, packed } : { raw };
+  }
+
+  try {
+    let off = 0, next = prepare(0);
+    while (off < file.size) {
+      const { raw, packed } = await next;
+      const end = off + raw.length;
+      next = end < file.size ? prepare(end) : null;
+      const data = packed ?? raw;
+      sent.scale = raw.length / data.length;
+      if (packed) dc.send(JSON.stringify({ t: 'z', n: packed.length, raw: raw.length }));
+      for (let i = 0; i < data.length; i += chunk) {
+        if (dc.bufferedAmount > HIGH) await drained(dc);
+        const piece = data.subarray(i, i + chunk);
+        dc.send(piece);
+        wire += piece.length;
+        sent.n += piece.length * sent.scale;
+      }
+      off = end;
+    }
+    dc.send(JSON.stringify({ t: 'done' }));
+  } finally {
+    clearInterval(sampler);
+  }
+}
+
+function drained(dc) {
+  return new Promise((ok, fail) => {
+    const off = () => { dc.onbufferedamountlow = null; dc.removeEventListener('close', bad); };
+    const bad = () => { off(); fail(); };
+    dc.onbufferedamountlow = () => { off(); ok(); };
+    dc.addEventListener('close', bad);
+  });
+}
+
+// ================= receiver =================
+
+let swReady = Promise.resolve(null);
+
+// Every sink: write(ArrayBuffer) sync and ordered, close() -> Promise<url?>, abort().
+// Photos and videos by extension. The share sheet offers Save Image or Save Video (on a Mac, Add to Photos)
+// only for a file of one of these types. SVG is left out because it can carry script.
+const MEDIA = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp',
+  heic: 'image/heic', heif: 'image/heif', mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v' };
+
+// sw streams into a normal browser download, fs into a file the person picks, mem into memory until the end
+async function sinkMode() {
+  // a fast click can beat the worker's first startup; give it a moment
+  const sw = await Promise.race([swReady, new Promise((ok) => setTimeout(ok, 1500, null))]);
+  const mode = new URLSearchParams(location.search).get('sink') ||
+    (sw && !/iP(hone|ad|od)|^((?!chrome|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent) ? 'sw'
+      : 'showSaveFilePicker' in window ? 'fs' : 'mem');
+  return { sw, mode };
+}
+
+async function openSink(meta, onCancel) {
+  const { sw, mode } = await sinkMode();
+
+  if (mode === 'sw') {
+    // stream straight into a normal browser download
+    const id = rid(20);
+    const { port1, port2 } = new MessageChannel();
+    await new Promise((ok) => {
+      port1.onmessage = (e) => (e.data === 'ready' ? ok() : e.data === 'cancel' && onCancel());
+      sw.postMessage({ type: 'register', id, name: meta.name, size: meta.size }, [port2]);
+    });
+    const frame = document.createElement('iframe');
+    frame.hidden = true;
+    frame.src = `dl/${id}/${encodeURIComponent(meta.name)}`;
+    document.body.append(frame);
+    const ping = setInterval(() => sw.postMessage({ type: 'ping' }), 10_000); // Firefox reaps idle workers
+    const stop = () => { clearInterval(ping); setTimeout(() => frame.remove(), 60_000); };
+    return {
+      write: (ab) => port1.postMessage(ab, [ab]),
+      close: async () => { port1.postMessage('end'); stop(); },
+      abort: () => { port1.postMessage('abort'); stop(); },
+    };
+  }
+  if (mode === 'fs') {
+    const handle = await showSaveFilePicker({ suggestedName: meta.name });
+    // some contexts (embedded browsers, private windows, protected folders)
+    // show the picker but refuse writing; fall back to memory then
+    const w = await handle.createWritable().catch(() => null);
+    if (w) {
+      let q = Promise.resolve();
+      return {
+        write: (ab) => (q = q.then(() => w.write(ab))),
+        close: async () => { await q; await w.close(); },
+        abort: () => w.abort().catch(() => {}),
+      };
+    }
+  }
+  let parts = [];
+  return {
+    write: (ab) => parts.push(ab),
+    // never the sender's MIME type: a text/html blob would open as a page on this origin
+    close: async () => new Blob(parts.splice(0), { type: 'application/octet-stream' }),
+    abort: () => (parts = []),
+  };
+}
+
+async function receive(secret) {
+  $('#recv').hidden = false;
+  $('#r-card').append($('#msg'));
+  // apps that open links in their own browser often drop downloads
+  if (/FBAN|FBAV|Instagram|LinkedInApp|Snapchat|Line\/|musical_ly|BytedanceWebview|MicroMessenger|KAKAOTALK|Pinterest|Twitter|; wv\)/.test(navigator.userAgent)) {
+    $('#r-note').textContent = "This is an app's built-in browser, which may not save files. Open the link in Safari, Chrome or your usual browser.";
+  }
+  if ('serviceWorker' in navigator) {
+    swReady = navigator.serviceWorker.register('sw.js')
+      .then(() => navigator.serviceWorker.ready)
+      .then((r) => r.active, () => null);
+  }
+
+  // hello -> answering -> answered -> verifying -> verified -> ready -> saving -> receiving -> done, or failed.
+  // blocked: hidden and the relay is unavailable, so nothing was created or sent.
+  // Until Download, changing the privacy box starts over from hello.
+  const room = await roomOf(secret);
+  // pc is the main connection and lan the local one. Both are links until the sender picks one by
+  // sending meta on it; dc is then that link's channel. links holds the channels open until then.
+  let phase, config, sig, hello, pc, lan, dc, links, offer, answer, meta, sink, xfer, timer, giveUp, got = 0, hellos = 0, attempts = 0;
+  // got counts file bytes written; arrived counts file bytes received or announced, for the size check.
+  // zin collects a compressed block's bytes; writes keeps every write, inflated or not, in file order.
+  let arrived = 0, zin = null, writes = Promise.resolve();
+  const slow = setTimeout(() => !meta && phase !== 'failed' && phase !== 'blocked' &&
+    say(config === LAN ? `Looking for the sender. ${relayNote()} Until then, hidden mode works only on the same Wi-Fi; ` +
+      'turning off Hide my IP address connects from anywhere.'
+      : 'Looking for the sender. Their page must still be open, and on screen if they are on a phone.', 'wait'), 6000);
+  privacyBox(() => !sink && phase !== 'saving' && start());
+  start();
+
+  // Each attempt has a fresh receiver id, so the sender sees a new peer, not a changed one.
+  async function start() {
+    const attempt = ++attempts;
+    hangUp();
+    phase = 'hello';
+    $('#go').hidden = true;
+    say('');
+    config = await rtcConfig(hide);
+    if (attempt !== attempts) return;
+    if (config === LAN) say(LOCAL_ONLY());
+    sig = signaling(room, rid(16), onSignal);
+    hellos = 0;
+    hello = setInterval(sayHello, HELLO_MS);
+    sayHello();
+  }
+
+  function hangUp() {
+    clearInterval(hello);
+    clearTimeout(giveUp);
+    sig?.stop();
+    const old = [pc, lan];
+    pc = lan = dc = links = offer = answer = undefined;
+    for (const conn of old) conn?.close();
+  }
+
+  function block() {
+    hangUp();
+    phase = 'blocked';
+    say(RELAY_DOWN(), 'error');
+  }
+
+  function sayHello() {
+    if (++hellos > HELLOS) return reject('Could not reach the sender. Their tab must be open. Reload to try again.');
+    sig.post('s', { t: 'hello' });
+  }
+
+  function fail(text) {
+    phase = 'failed';
+    stayAwake(false);
+    clearInterval(hello);
+    clearInterval(timer);
+    clearTimeout(slow);
+    sig?.stop();
+    sink?.abort();
+    $('#go').hidden = true;
+    $('#r-card').classList.remove('waiting');
+    xfer?.label('', 'stop');
+    say(text, 'error');
+  }
+  function reject(text) {
+    fail(text);
+    pc?.close();
+    lan?.close();
+  }
+
+  async function onSignal(m) {
+    if (m.t !== 'offer') return;
+    if (phase === 'answered' && m.sdp.sdp === offer) return sig.post('s', answer);
+    if (phase !== 'hello' && phase !== 'answered') return;
+    // a different offer means the sender dropped our first attempt and started over
+    pc?.close();
+    lan?.close();
+    phase = 'answering';
+    offer = m.sdp.sdp;
+    links = new Set();
+    // Local-only when this side has no relay, or the sender has none and sent only .local names. Its
+    // main connection then has no servers and accepts and sends only .local names, so it reaches only
+    // the same network and still reveals no address.
+    const localRoute = config === LAN || (!m.lan && allLocal(m.sdp.sdp));
+    const mine = (pc = new RTCPeerConnection(localRoute ? LAN : config));
+    const local = m.lan && localOnly(m.lan.sdp);
+    const mineLan = (lan = local ? new RTCPeerConnection(LAN) : undefined);
+    for (const conn of [mine, mineLan]) {
+      if (conn) conn.ondatachannel = (e) => (conn === pc || conn === lan) && setup(e.channel, conn);
+    }
+    // fails once neither link can connect; a link that wasn't picked is closed and counts as dead
+    const dead = (c) => !c || c.connectionState === 'failed' || c.connectionState === 'closed';
+    const check = () => mine === pc && dead(pc) && dead(lan) && phase !== 'done' && phase !== 'failed' &&
+      fail(localRoute ? RELAY_DOWN() : 'Could not connect. Try another network or turn off a VPN.');
+    for (const conn of [mine, mineLan]) if (conn) conn.onconnectionstatechange = check;
+    try {
+      await mine.setRemoteDescription(localRoute ? { type: 'offer', sdp: onlyLocal(m.sdp.sdp) } : m.sdp);
+      const lanDesc = mineLan && await mineLan.setRemoteDescription({ type: 'offer', sdp: local })
+        .then(() => describeLan(mineLan), () => null);
+      const raw = await describe(mine);
+      if (mine !== pc || phase !== 'answering') return;
+      if (mineLan && !lanDesc) {
+        mineLan.close();
+        lan = undefined;
+      }
+      const desc = localRoute ? { type: 'answer', sdp: onlyLocal(raw.sdp) } : raw;
+      if (localRoute && !candidates(desc.sdp) && !lanDesc) return block();
+      answer = lanDesc ? { t: 'answer', sdp: desc, lan: lanDesc } : { t: 'answer', sdp: desc };
+      phase = 'answered';
+      sig.post('s', answer);
+      if (localRoute) giveUp = setTimeout(() => (phase === 'answered' || phase === 'verifying') && reject(RELAY_DOWN()), LOCAL_MS);
+    } catch (err) {
+      if (mine !== pc || phase !== 'answering') return;
+      if (err.message === NO_RELAY) block();
+      else phase = 'hello';
+    }
+  }
+
+  function setup(channel, conn) {
+    const link = { conn, channel, proven: false }, offered = links;
+    links.add(link);
+    channel.binaryType = 'arraybuffer';
+    // until the sender picks a link, each of this offer's links counts; then only the picked one
+    const current = () => (dc ? channel === dc : links === offered && links.has(link));
+    channel.onopen = async () => {
+      if (!current()) return;
+      if (phase === 'answered') phase = 'verifying';
+      clearInterval(hello);
+      sig.stop(); // connected; the server is out of the picture
+      const p = await proof(secret, 'r', conn, 'r');
+      if (current()) channel.send(JSON.stringify({ t: 'hi', p }));
+    };
+    let queue = Promise.resolve();
+    channel.onmessage = (e) => {
+      if (!current()) return;
+      if (typeof e.data !== 'string') return channel === dc && onBytes(e.data);
+      const m = parseControl(e.data, ['hi', 'meta', 'done', 'z']);
+      // a z header must apply to the very next bytes, so it can't wait in the queue
+      if (m?.t === 'z') return onZip(m);
+      queue = queue.then(() => current() && onControl(m, link)).catch((err) => reject(`Could not save: ${err.message}`));
+    };
+    channel.onclose = () => {
+      if (!current() || phase === 'done' || phase === 'failed') return;
+      if (!dc) {
+        // the sender closes the link it doesn't pick; the main one may still be connecting
+        links.delete(link);
+        if (links.size || pc.connectionState === 'new' || pc.connectionState === 'connecting') return;
+      }
+      fail(got ? `The sender disconnected at ${size(got)}.` : 'The sender disconnected.');
+    };
+  }
+
+  function onBytes(ab) {
+    if (phase !== 'receiving') return; // chunks still in flight after a cancel
+    if (zin) {
+      zin.parts.push(ab);
+      zin.left -= ab.byteLength;
+      if (zin.left < 0) return reject('The sender sent something unexpected.');
+      if (!zin.left) {
+        const block = zin;
+        zin = null;
+        queueWrite(() => unpack(block));
+      }
+      return;
+    }
+    arrived += ab.byteLength;
+    if (arrived > meta.size) return reject('The sender sent more than the file size.');
+    queueWrite(() => put(ab));
+  }
+
+  function onZip(m) {
+    if (phase !== 'receiving' || zin) return reject('The sender sent something unexpected.');
+    arrived += m.raw;
+    if (arrived > meta.size) return reject('The sender sent more than the file size.');
+    zin = { left: m.n, n: m.n, raw: m.raw, parts: [] };
+  }
+
+  const queueWrite = (step) =>
+    (writes = writes.then(step).catch(() => phase === 'receiving' && reject('The sender sent something unexpected.')));
+
+  function put(ab) {
+    if (phase !== 'receiving') return;
+    got += ab.byteLength; // before write: the sw sink detaches the buffer
+    sink.write(ab);
+  }
+
+  // Stops reading as soon as the output passes the size the sender announced.
+  async function unpack(block) {
+    const reader = new Blob(block.parts).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+    const out = [];
+    for (let n = 0; ;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        if (n !== block.raw) throw new Error('size');
+        break;
+      }
+      n += value.byteLength;
+      if (n > block.raw) {
+        reader.cancel();
+        throw new Error('size');
+      }
+      out.push(value);
+    }
+    for (const v of out) put(v.byteOffset || v.byteLength !== v.buffer.byteLength ? v.slice().buffer : v.buffer);
+  }
+
+  async function onControl(m, link) {
+    if (phase === 'failed' || phase === 'done') return;
+    if (m?.t === 'hi' && !dc && !link.proven && (phase === 'verifying' || phase === 'verified')) {
+      const want = await proof(secret, 's', link.conn, 'r');
+      if (!links?.has(link)) return; // started over while hashing
+      if (m.p !== want) return reject('Could not verify the sender. The connection may have been tampered with.');
+      link.proven = true;
+      phase = 'verified';
+    } else if (m?.t === 'meta' && phase === 'verified' && !dc && link.proven) {
+      // the sender picked this link; the other one goes
+      dc = link.channel;
+      if (link.conn === lan) pc.close();
+      else {
+        lan?.close();
+        lan = undefined;
+      }
+      clearTimeout(slow);
+      meta = m;
+      phase = 'ready';
+      say('');
+      $('#r-card').classList.remove('waiting');
+      named($('#r-name'), meta.name);
+      $('#r-size').textContent = size(meta.size);
+      document.title = meta.name;
+      $('#go').hidden = false;
+      sinkMode().then(({ mode }) => mode === 'mem' && meta.size > BIG && !$('#r-note').textContent &&
+        ($('#r-note').textContent = 'This browser keeps the whole file in memory until it finishes, and a file this big may not fit. ' +
+          'Chrome, Edge or Firefox on a computer, in a normal window rather than a private one, saves it as it arrives.'));
+    } else if (m?.t === 'done' && phase === 'receiving') {
+      clearInterval(timer);
+      await writes;
+      if (phase !== 'receiving') return;
+      if (zin || got !== meta.size) return reject(`The transfer stopped at ${size(got)} of ${size(meta.size)}.`);
+      const blob = await sink.close();
+      phase = 'done';
+      stayAwake(false);
+      $('#r-note').textContent = '';
+      xfer.label('Received.', 'done');
+      xfer.set(meta.size, meta.size);
+      celebrate($('#r-card'));
+      dc.send(JSON.stringify({ t: 'got' }));
+      if (!blob) return say('Saved.');
+      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: meta.name, textContent: 'Save file' });
+      const type = MEDIA[meta.name.split('.').pop().toLowerCase()];
+      const media = type && new File([blob], meta.name, { type });
+      if (!media || !navigator.canShare?.({ files: [media] })) {
+        a.click();
+        $('#msg').replaceChildren(spoken('Done. '), a);
+        return a.focus();
+      }
+      // a photo or video goes to the share sheet, where the person picks Photos; the plain download is the fallback
+      const photos = Object.assign(document.createElement('button'), { textContent: /Mac|iP/.test(navigator.userAgent) ? 'Save to Photos' : 'Share' });
+      photos.onclick = () => navigator.share({ files: [media] }).catch((err) =>
+        err.name !== 'AbortError' && $('#msg').replaceChildren("Couldn't open the share sheet. ", a));
+      $('#msg').replaceChildren(spoken('Done. '), photos, a);
+      photos.focus();
+    } else {
+      reject('The sender sent something unexpected.');
+    }
+  }
+
+  $('#go').onclick = async () => {
+    if (phase !== 'ready') return;
+    phase = 'saving';
+    $('#go').disabled = $('#hide').disabled = true;
+    let opened;
+    try {
+      opened = await openSink(meta, () => {
+        if (phase !== 'receiving') return;
+        dc.send(JSON.stringify({ t: 'cancel' }));
+        fail('Cancelled.');
+      });
+    } catch (err) {
+      if (phase !== 'saving') return;
+      phase = 'ready';
+      $('#go').disabled = $('#hide').disabled = false;
+      if (err.name !== 'AbortError') say(`Could not save: ${err.message}`);
+      return;
+    }
+    if (phase !== 'saving') return opened.abort(); // the sender left while the picker was open
+    sink = opened;
+    phase = 'receiving';
+    stayAwake(true);
+    $('#go').hidden = true;
+    xfer = view($('#r-xfer'));
+    xfer.label('Receiving', 'live');
+    xfer.focus(); // Download is gone, so focus moves to what replaced it
+    xfer.set(0, meta.size);
+    // ?zip=0 turns compression off, to compare against it
+    dc.send(JSON.stringify(!ZIP || new URLSearchParams(location.search).get('zip') === '0' ? { t: 'start' } : { t: 'start', z: 1 }));
+    // progress counts bytes as they arrive, a compressed block's in proportion, so a slow block doesn't freeze the bar
+    const seen = () => Math.min(meta.size, zin ? arrived - zin.raw * (zin.left / zin.n) : arrived);
+    timer = setInterval(() => xfer.set(seen(), meta.size), 300);
+  };
+  addEventListener('beforeunload', (e) => phase === 'receiving' && e.preventDefault());
+}
+
+// ================= boot =================
+
+// glass catches a soft light where the pointer is
+addEventListener('pointermove', (e) => {
+  const card = e.pointerType === 'mouse' && e.target.closest?.('.lit');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+  card.style.setProperty('--my', `${e.clientY - r.top}px`);
+}, { passive: true });
+addEventListener('hashchange', () => location.reload());
+// a file dropped anywhere else would replace this page, and end any transfer in it
+addEventListener('dragover', (e) => e.preventDefault());
+addEventListener('drop', (e) => e.preventDefault());
+addEventListener('pageshow', (e) => e.persisted && location.reload());
+const hash = location.hash.slice(1);
+const secret = hash.toLowerCase().replace(/[^a-z0-9]+$/, '');
+if (!window.isSecureContext) say('This page needs HTTPS.');
+else if (/^[a-z0-9]{20}$/.test(secret)) receive(secret);
+else if (hash) broken();
+else pickFile();
+
+function broken() {
+  $('#recv').hidden = false;
+  $('#r-card').classList.remove('waiting');
+  $('#r-card').append($('#msg'));
+  $('#r-name').textContent = 'This link looks incomplete';
+  $('#r-size').textContent = 'Part of it may have been cut off.';
+  say('Ask the sender to send the link again, or copy the whole link from their message.', 'error');
+}
+</script>
+</body>
+</html>

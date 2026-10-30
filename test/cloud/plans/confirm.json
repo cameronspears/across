@@ -1,0 +1,1 @@
+[{"kind":"app","label":"live-hidden2","sHide":"1","rHide":"1","bytes":100000000},{"kind":"app","label":"patched-hidden","sHide":"1","rHide":"1","bytes":100000000,"page":"patched/page.json"},{"kind":"app","label":"live-hidden2","sHide":"1","rHide":"1","bytes":100000000},{"kind":"app","label":"patched-hidden","sHide":"1","rHide":"1","bytes":100000000,"page":"patched/page.json"}]
