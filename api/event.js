@@ -91,7 +91,7 @@ async function visitor(ip, ua) {
 
 const reply = (status) => new Response(null, { status, headers: { 'Cache-Control': 'no-store' } });
 
-export async function POST(request, send = fetch) {
+export async function POST(request) {
   if (crossSite(request)) return reply(403);
   // Global Privacy Control: the browser asked not to be tracked, so nothing is recorded
   if (request.headers.get('sec-gpc') === '1' || request.headers.get('dnt') === '1') return reply(204);
@@ -130,7 +130,7 @@ export async function POST(request, send = fetch) {
     ...(ref && { $referring_domain: ref, $referrer: `https://${ref}/` }),
     $lib: 'across',
   };
-  const r = await send(`${HOST}/i/v0/e/`, {
+  const r = await fetch(`${HOST}/i/v0/e/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ api_key: key, event: ok.event, distinct_id: properties.distinct_id, properties, timestamp: new Date().toISOString() }),

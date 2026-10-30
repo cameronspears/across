@@ -10,13 +10,14 @@ const ev = (e, p = {}) => ({ e, p: { s: S, page: '/', ...p } });
 let ip = 0;
 async function post(body, headers = {}) {
   const sent = [];
-  const send = async (url, init) => (sent.push({ url, body: JSON.parse(init.body) }), new Response(null, { status: 200 }));
+  // Vercel passes handlers a second argument, so the stub replaces fetch rather than being passed in
+  globalThis.fetch = async (url, init) => (sent.push({ url, body: JSON.parse(init.body) }), new Response(null, { status: 200 }));
   const request = new Request('https://acrossfile.com/api/event', {
     method: 'POST',
     body: typeof body === 'string' ? body : JSON.stringify(body),
     headers: { 'user-agent': UA, 'sec-fetch-site': 'same-origin', 'x-real-ip': `203.0.113.${++ip % 250}`, 'x-vercel-ip-country': 'NZ', ...headers },
   });
-  const r = await POST(request, send);
+  const r = await POST(request, { waitUntil() {} });
   return { status: r.status, sent };
 }
 
