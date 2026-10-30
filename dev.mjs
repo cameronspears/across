@@ -16,6 +16,14 @@ const pages = {
   '/': { type: 'text/html; charset=utf-8', body: html },
   '/how': { type: 'text/html; charset=utf-8', body: how },
   '/sw.js': { type: 'text/javascript; charset=utf-8', body: read('./public/sw.js') },
+  '/logo.svg': { type: 'image/svg+xml', body: read('./public/logo.svg') },
+  '/apple-touch-icon.png': { type: 'image/png', body: read('./public/apple-touch-icon.png') },
+  '/icon-192.png': { type: 'image/png', body: read('./public/icon-192.png') },
+  '/icon-512.png': { type: 'image/png', body: read('./public/icon-512.png') },
+  '/og.png': { type: 'image/png', body: read('./public/og.png') },
+  '/site.webmanifest': { type: 'application/manifest+json', body: read('./public/site.webmanifest') },
+  '/robots.txt': { type: 'text/plain; charset=utf-8', body: read('./public/robots.txt') },
+  '/sitemap.xml': { type: 'application/xml', body: read('./public/sitemap.xml') },
 };
 const functions = { '/api/signal': signal, '/api/ice': ice, '/api/guard': guard, '/api/code': code };
 const rules = headerRules(html.toString('utf8'), how.toString('utf8')).map((r) => ({ ...r, match: new RegExp(`^${r.source}$`) }));
