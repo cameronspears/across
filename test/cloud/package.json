@@ -1,1 +1,1 @@
-{ "private": true, "type": "module", "dependencies": { "@vercel/sandbox": "3.9.1" } }
+{"private": true, "type": "module", "dependencies": {"@vercel/sandbox": "3.9.1"}, "overrides": {"zod": "^4.6.6"}}
