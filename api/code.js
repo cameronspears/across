@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { codes } from '../lib/codes.js';
 import { storeFromEnv } from '../lib/guard.js';
-import { limiter, clientIp } from '../lib/limit.js';
+import { limiter, clientIp, crossSite } from '../lib/limit.js';
 
 const store = codes();
 const over = limiter(storeFromEnv());
@@ -10,6 +10,9 @@ const over = limiter(storeFromEnv());
 const perMin = (name, fallback) => Number(process.env[name]) || fallback;
 const CLAIMS_PER_MIN = perMin('CODE_CLAIMS_PER_MIN', 20);
 const FINDS_PER_MIN = perMin('CODE_FINDS_PER_MIN', 30);
+// Names a client may take that it doesn't already hold, per 10 minutes (a name's lifetime). Renewals don't count,
+// so one address can hold at most this many of the 361 names instead of 200.
+const NEW_PER_10_MIN = perMin('CODE_NEW_PER_10_MIN', 30);
 const NAME = /^[bcdfghjkmnpqrstvwxz]{2}$/;
 const KEY = /^[a-z0-9]{20}$/;
 // the room is derived from a key only its sender knows, so only that sender can renew or release it
@@ -23,6 +26,7 @@ const reply = (status, body, retry) =>
 
 // GET ?name=: the room a code's name leads to
 export async function GET(request) {
+  if (crossSite(request)) return reply(403);
   const name = new URL(request.url).searchParams.get('name') ?? '';
   if (!NAME.test(name)) return reply(400);
   const retry = await over(clientIp(request), 'code:find', FINDS_PER_MIN, 60);
@@ -33,6 +37,7 @@ export async function GET(request) {
 
 // POST {name, key}: hold name for this sender's room, or renew it. {name, key, end: true} lets it go.
 export async function POST(request) {
+  if (crossSite(request)) return reply(403);
   const retry = await over(clientIp(request), 'code:claim', CLAIMS_PER_MIN, 60);
   if (retry) return reply(429, null, retry);
   let m;
@@ -46,6 +51,10 @@ export async function POST(request) {
   if (m.end === true) {
     await store.release(m.name, room);
     return reply(204);
+  }
+  if ((await store.find(m.name)) !== room) {
+    const wait = await over(clientIp(request), 'code:new', NEW_PER_10_MIN, 600);
+    if (wait) return reply(429, null, wait);
   }
   return (await store.claim(m.name, room)) ? reply(204) : reply(409);
 }
