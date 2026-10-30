@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
 const [project, devBase] = process.argv.slice(2);
-const esbuild = await import('/Users/cam/.nvm/versions/node/v22.15.1/lib/node_modules/vercel/node_modules/esbuild/lib/main.js');
+const esbuild = await import(`${execFileSync('npm', ['root', '-g']).toString().trim()}/vercel/node_modules/esbuild/lib/main.js`);
 const csp = (config) => config.headers.flatMap((r) => r.headers).find((h) => h.key === 'Content-Security-Policy').value;
 let failures = 0;
 const check = (name, ok, detail = '') => { failures += !ok; console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${detail && `\n     ${detail}`}`); };
