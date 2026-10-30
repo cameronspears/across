@@ -1,6 +1,6 @@
 # Across
 
-Send a file from one browser to another. There is no size limit and no account. The file, its name, and the secret in the link never reach the server. By default, neither person learns the other's IP address.
+Send a file from one browser to another. There is no account. Files of any size go through on the same network or over a direct connection. Transfers through the relay share a daily and monthly allowance of relay traffic (see [Set up the relay](#set-up-the-relay)), so a very large hidden transfer can stop partway when it runs out. The file, its name, and the secret in the link never reach the server. By default, neither person learns the other's IP address.
 
 Live at https://acrossfile.com. A plain-language explanation for users is at https://acrossfile.com/how (`public/how.html`). MIT licensed; see `LICENSE`. To report a security problem, see `SECURITY.md`.
 
