@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#fafafa">
+<title>Privacy · Across</title>
+<meta name="description" content="Exactly what Across counts about how it is used, what it never collects, and how to turn it off.">
+<meta property="og:title" content="Privacy · Across">
+<meta property="og:description" content="Exactly what Across counts about how it is used, what it never collects, and how to turn it off.">
+<meta property="og:url" content="https://acrossfile.com/privacy">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='19' height='19' rx='6'/%3E%3Cpath d='M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3'/%3E%3C/svg%3E">
+<style>
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --r:16px;--s1:4px;--s2:8px;--s3:16px;--s4:24px;--s5:48px;--s6:80px;
+  color-scheme:light;
+  --bg:oklch(98.6% 0 0);
+  --strong:oklch(14% 0 0);--text:oklch(25% 0 0);--muted:oklch(43% 0 0);
+  --rule:oklch(0% 0 0 / .08);--fill:oklch(0% 0 0 / .045);
+  --card:oklch(100% 0 0 / .8);--card-rim:oklch(0% 0 0 / .07);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;color:var(--text);font:400 16px/1.6 var(--font);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+::selection{background:color-mix(in oklch,var(--strong) 26%,transparent);color:var(--strong)}
+b,strong{color:var(--strong);font-weight:600}
+a{color:var(--strong);text-underline-offset:3px;text-decoration-thickness:1px;overflow-wrap:anywhere}
+:focus-visible{outline:2px solid var(--strong);outline-offset:3px}
+.wrap{width:100%;max-width:688px;margin:0 auto;padding-inline:max(var(--s3),env(safe-area-inset-left)) max(var(--s3),env(safe-area-inset-right))}
+.bar{padding-top:max(var(--s3),env(safe-area-inset-top))}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
+.mark{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:var(--strong);text-decoration:none;font-weight:600;font-size:15px}
+.mark svg{width:22px;height:22px;flex:none}
+.cta{display:inline-flex;align-items:center;min-height:40px;padding:0 var(--s3);border-radius:999px;background:var(--strong);color:oklch(99.5% 0 0);text-decoration:none;font-size:14px;font-weight:600}
+main{flex:1;padding-block:var(--s5) var(--s6)}
+h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px);line-height:1.06;letter-spacing:-.025em;text-wrap:balance}
+.lead{margin:var(--s3) 0 0;color:var(--muted);font-size:18px;max-width:34em;text-wrap:pretty}
+h2{margin:var(--s5) 0 var(--s2);color:var(--strong);font-weight:600;font-size:21px;letter-spacing:-.01em}
+p,ul,ol{margin:var(--s2) 0 0;text-wrap:pretty}
+ul,ol{padding-left:1.2em}
+li+li{margin-top:var(--s2)}
+.steps{counter-reset:step;list-style:none;padding:0}
+.steps li{position:relative;padding-left:40px}
+.steps li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;background:var(--fill);color:var(--strong);font-size:13px;font-weight:600;display:grid;place-items:center}
+.scroll{overflow-x:auto;margin-top:var(--s3);border-radius:var(--r);box-shadow:inset 0 0 0 1px var(--card-rim);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:12px 14px;border-bottom:1px solid var(--rule)}
+tr:last-child th,tr:last-child td{border-bottom:0}
+thead th{color:var(--muted);font-weight:500;font-size:13px}
+tbody th{color:var(--strong);font-weight:600;width:28%}
+.no{color:var(--muted)}
+code,pre{font-family:var(--mono);font-size:14px}
+code{background:var(--fill);padding:1px 5px;border-radius:5px}
+pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--fill);overflow-x:auto;white-space:pre}
+.foot{padding-block:var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));color:var(--muted);font-size:13px;border-top:1px solid var(--rule)}
+.foot .wrap{display:flex;justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
+.switch{display:flex;align-items:center;gap:12px;margin-top:var(--s3);padding:var(--s3);border-radius:var(--r);box-shadow:inset 0 0 0 1px var(--card-rim);background:var(--card)}
+.switch input{width:20px;height:20px;margin:0;accent-color:var(--strong);flex:none}
+.switch label{color:var(--strong);font-weight:600}
+#stats-note{color:var(--muted);font-size:15px}
+</style>
+</head>
+<body>
+<header class="bar">
+<div class="wrap">
+<a class="mark" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="6"/><path d="M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3" stroke-width="1.6"/></svg>Across</a>
+<a class="cta" href="./">Send a file</a>
+</div>
+</header>
+
+<main>
+<div class="wrap">
+<h1>Privacy</h1>
+<p class="lead">Across counts how it is used so we can make it faster and more reliable. We never see your files, their names, your links or codes, or your IP address in those counts. Here is everything, in plain words.</p>
+
+<h2>What we never collect</h2>
+<ul>
+<li>Your file, any part of it, or its name. The file goes straight from one browser to the other, encrypted.</li>
+<li>The link’s secret or the six-letter code.</li>
+<li>Your IP address, precise location, or anything that follows you from one day to the next.</li>
+<li>Cookies, fingerprints, ad IDs, or session recordings. There are no third-party scripts on the page.</li>
+</ul>
+
+<h2>What we count</h2>
+<p>The page sends a short message to our own server when something happens. Our server checks every field against a fixed list, drops anything not on it, and passes the rest to <a href="https://posthog.com">PostHog</a> (in the US), which shows us charts. The list:</p>
+<div class="scroll">
+<table>
+<thead><tr><th scope="col">When</th><th scope="col">What is sent</th></tr></thead>
+<tbody>
+<tr><th scope="row">You open a page</th><td>Which page; whether you came from a link, a code or the home page; the name of the website that sent you, if any, and campaign tags like <code>utm_source</code>; your language; your window width</td></tr>
+<tr><th scope="row">You pick a file</th><td>Its size, rounded to two figures (3.4 GB, not 3,412,876,544 bytes); its kind (image, video, document…) and extension if it is a common one like <code>pdf</code>; whether Hide my IP is on</td></tr>
+<tr><th scope="row">The two browsers connect</th><td>Sender or receiver; link or code; whether it went over the same network, directly, or through the relay; how long connecting took</td></tr>
+<tr><th scope="row">A transfer starts, finishes or fails</th><td>Size (rounded) and kind; how long it took and how fast it went; whether compression was used; how the file was saved; if it failed, at what step and a short reason like “disconnected”</td></tr>
+<tr><th scope="row">Other moments</th><td>Copying or sharing the link (not the link itself), a wrong or expired code (not the code), the relay being unavailable, and the text of a page error so we can fix it</td></tr>
+</tbody>
+</table>
+</div>
+<p>With each of these our server adds your country (from the network, not GPS), your browser, operating system and device type (like “Chrome, Windows, Desktop”), and two random labels:</p>
+<ul>
+<li>A visit label, made fresh each time a page opens and kept only in that page’s memory. It lets us see that one visit picked a file and then connected.</li>
+<li>A daily visitor label, a scrambled fingerprint of your network address and browser mixed with a secret that changes every day and is then thrown away. It lets us count people per day without cookies. Nobody, us included, can turn it back into an address or link two days together.</li>
+</ul>
+<p>Search engines, link previews and other bots are not counted.</p>
+
+<h2>Who can see it</h2>
+<p>Only the people who run Across, in PostHog. We don’t sell or share it, and it isn’t used for ads. PostHog keeps it under <a href="https://posthog.com/privacy">its privacy policy</a>, for as long as our plan keeps data.</p>
+
+<h2>Turn it off</h2>
+<p>Nothing is sent if your browser has <b>Global Privacy Control</b> or <b>Do Not Track</b> on. You can also switch it off here, for this browser:</p>
+<div class="switch"><input type="checkbox" id="stats" checked><label for="stats">Send anonymous usage stats</label></div>
+<p id="stats-note" aria-live="polite"></p>
+<p>Across works exactly the same either way.</p>
+
+<h2>Check it yourself</h2>
+<p>The code that decides what is sent is open: the page’s <code>track</code> calls in <a href="https://github.com/cameronspears/across/blob/main/public/index.html">public/index.html</a>, and the fixed list our server enforces in <a href="https://github.com/cameronspears/across/blob/main/api/event.js">api/event.js</a>. In your browser’s developer tools, the Network tab shows each <code>api/event</code> message as it goes. Questions? <a href="https://github.com/cameronspears/across/issues">Open an issue</a>.</p>
+</div>
+</main>
+<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><span><a href="how">How it works</a> · <a href="https://github.com/cameronspears/across">Source code</a></span></div></footer>
+<script>
+'use strict';
+const box = document.getElementById('stats'), note = document.getElementById('stats-note');
+const blocked = navigator.globalPrivacyControl === true || navigator.doNotTrack === '1';
+let off = false;
+try {
+  off = localStorage.getItem('no-stats') === '1';
+} catch {}
+const show = () => {
+  box.checked = !off && !blocked;
+  box.disabled = blocked;
+  note.textContent = blocked ? 'Your browser asks sites not to track you, so nothing is sent.' : off ? 'Off for this browser. Nothing is sent.' : '';
+};
+box.onchange = () => {
+  off = !box.checked;
+  try {
+    if (off) localStorage.setItem('no-stats', '1');
+    else localStorage.removeItem('no-stats');
+  } catch {
+    note.textContent = "This browser won't let the page remember your choice.";
+    return;
+  }
+  show();
+};
+show();
+// one anonymous page view, as above
+(() => {
+  if (off || blocked) return;
+  try {
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    for (let i = 5, t = Date.now(); i >= 0; i--, t = Math.floor(t / 256)) b[i] = t % 256;
+    b[6] = (b[6] & 15) | 0x70;
+    b[8] = (b[8] & 63) | 0x80;
+    const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+    const s = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+    let ref;
+    try {
+      ref = new URL(document.referrer).hostname;
+    } catch {}
+    navigator.sendBeacon('api/event', JSON.stringify({ e: '$pageview', p: { s, page: '/privacy', ...(ref && ref !== location.hostname && { ref }) } }));
+  } catch {}
+})();
+</script>
+</body>
+</html>

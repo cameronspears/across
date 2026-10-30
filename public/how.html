@@ -92,6 +92,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 <tbody>
 <tr><th scope="row">The person you send to</th><td>Yes</td><td>Yes</td><td>Only if you turn off <b>Hide my IP address</b></td></tr>
 <tr><th scope="row">Our server (on Vercel)</th><td class="no">No</td><td class="no">No, only its hash</td><td>Yes, as every website does. Our database stores only a salted hash of it, for rate limits, and the salt changes daily.</td></tr>
+<tr><th scope="row">Our usage stats (PostHog)</th><td class="no">No, only its size, rounded, and its kind, like “video”</td><td class="no">No</td><td class="no">No, only your country</td></tr>
 <tr><th scope="row">The relay (Cloudflare)</th><td class="no">No, only encrypted bytes</td><td class="no">No</td><td>Yes, when it carries your transfer</td></tr>
 <tr><th scope="row">Anyone else on the network</th><td class="no">No, it’s encrypted</td><td class="no">No</td><td>They see that you connected, like any traffic</td></tr>
 </tbody>
@@ -105,7 +106,8 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 
 <h2>What we don’t do</h2>
 <ul>
-<li>No accounts, no ads, no analytics, no cookies, and no third-party scripts. The only thing the page saves on your device is your Hide my IP setting.</li>
+<li>No accounts, no ads, no cookies, and no third-party scripts. The only thing the page saves on your device is your Hide my IP setting (and your choice to turn off usage stats, if you make it).</li>
+<li>We count how Across is used (for example how many transfers finish, how big they are, and whether they went through the relay), never what is in them or who sent them. <a href="privacy">Here is exactly what we collect</a>, and how to turn it off.</li>
 <li>No file storage. There’s nowhere on our side to put one.</li>
 <li>The page’s security policy (CSP) stops it loading code from anywhere else, or sending data to any website but this one. The only other outside connections are the WebRTC ones described above.</li>
 </ul>
@@ -125,6 +127,27 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 </div>
 </main>
 
-<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><a href="https://github.com/cameronspears/across">Source code</a></div></footer>
+<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><span><a href="privacy">Privacy</a> · <a href="https://github.com/cameronspears/across">Source code</a></span></div></footer>
+<script>
+'use strict';
+// one anonymous page view; see /privacy. Nothing is sent with Global Privacy Control, Do Not Track or the opt-out.
+(() => {
+  try {
+    if (localStorage.getItem('no-stats') === '1' || navigator.globalPrivacyControl === true || navigator.doNotTrack === '1') return;
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    for (let i = 5, t = Date.now(); i >= 0; i--, t = Math.floor(t / 256)) b[i] = t % 256;
+    b[6] = (b[6] & 15) | 0x70;
+    b[8] = (b[8] & 63) | 0x80;
+    const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+    const s = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+    let ref;
+    try {
+      ref = new URL(document.referrer).hostname;
+    } catch {}
+    const page = location.pathname.replace(/\.html$/, '');
+    navigator.sendBeacon('api/event', JSON.stringify({ e: '$pageview', p: { s, page, ...(ref && ref !== location.hostname && { ref }) } }));
+  } catch {}
+})();
+</script>
 </body>
 </html>

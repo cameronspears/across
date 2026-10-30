@@ -35,7 +35,7 @@ html = ''.join(open(f, encoding='utf-8').read() for f in sys.argv[1:])
 for tag in ('script', 'style'):
     for body in re.findall('<%s>(.*?)</%s>' % (tag, tag), html, re.S):
         print(tag, "'sha256-" + base64.b64encode(hashlib.sha256(body.encode('utf-8')).digest()).decode() + "'")
-`, ...['index.html', 'how.html'].map((f) => path.join(project, 'public', f))]).toString().trim().split('\n').map((l) => l.split(' '));
+`, ...['index.html', 'how.html', 'privacy.html'].map((f) => path.join(project, 'public', f))]).toString().trim().split('\n').map((l) => l.split(' '));
 
 console.log('vercel.ts (strip-types) config:', JSON.stringify({ ...stripped, headers: `${stripped.headers.length} rules` }));
 console.log('CSP:', csp(stripped));

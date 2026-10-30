@@ -10,9 +10,10 @@ export const config: VercelConfig = {
     'api/ice.js': { maxDuration: 10 },
     'api/guard.js': { maxDuration: 10 },
     'api/code.js': { maxDuration: 10 },
+    'api/event.js': { maxDuration: 10 },
   },
   redirects: [
     { source: '/:path*', has: [{ type: 'host', value: 'www.acrossfile.com' }], destination: 'https://acrossfile.com/:path*', permanent: true },
   ],
-  headers: headerRules(...['public/index.html', 'public/how.html'].map((f) => readFileSync(f, 'utf8'))),
+  headers: headerRules(...['public/index.html', 'public/how.html', 'public/privacy.html'].map((f) => readFileSync(f, 'utf8'))),
 };
