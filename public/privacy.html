@@ -91,7 +91,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 <li>Your file, any part of it, or its name. The file goes straight from one browser to the other, encrypted.</li>
 <li>The link’s secret or the six-letter code.</li>
 <li>Your IP address, precise location, or anything that follows you from one day to the next.</li>
-<li>Cookies, fingerprints, ad IDs, or session recordings. There are no third-party scripts on the page.</li>
+<li>Cookies, browser fingerprinting, ad IDs, or session recordings. There are no third-party scripts on the page.</li>
 </ul>
 
 <h2>What we count</h2>
@@ -102,16 +102,16 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 <tbody>
 <tr><th scope="row">You open a page</th><td>Which page; whether you came from a link, a code or the home page; the name of the website that sent you, if any, and campaign tags like <code>utm_source</code>; your language; your window width</td></tr>
 <tr><th scope="row">You pick a file</th><td>Its size, rounded to two figures (3.4 GB, not 3,412,876,544 bytes); its kind (image, video, document…) and extension if it is a common one like <code>pdf</code>; whether Hide my IP is on</td></tr>
-<tr><th scope="row">The two browsers connect</th><td>Sender or receiver; link or code; whether it went over the same network, directly, or through the relay; how long connecting took</td></tr>
-<tr><th scope="row">A transfer starts, finishes or fails</th><td>Size (rounded) and kind; how long it took and how fast it went; whether compression was used; how the file was saved; if it failed, at what step and a short reason like “disconnected”</td></tr>
-<tr><th scope="row">Other moments</th><td>Copying or sharing the link (not the link itself), a wrong or expired code (not the code), the relay being unavailable, and the text of a page error so we can fix it</td></tr>
+<tr><th scope="row">The two browsers connect</th><td>Sender or receiver; link or code; whether it went over the same network, directly, or through the relay; how long connecting took; whether Hide my IP is on</td></tr>
+<tr><th scope="row">A transfer starts, finishes or fails</th><td>Size (rounded), kind and common extension; link or code, and the route it took; how long it took and how fast it went; whether compression was used; how the file was saved; if it failed, at what step, how much had arrived (rounded) and a short reason like “disconnected”</td></tr>
+<tr><th scope="row">Other moments</th><td>Trying to send several files or a folder at once, showing a code, typing one and whether it was well formed, copying or sharing the link (not the link itself), a wrong or expired code (not the code), the relay being unavailable, and the text of a page error so we can fix it</td></tr>
 </tbody>
 </table>
 </div>
-<p>With each of these our server adds your country (from the network, not GPS), your browser, operating system and device type (like “Chrome, Windows, Desktop”), and two random labels:</p>
+<p>With each of these our server adds your country (from the network, not GPS), your browser, operating system and device type (like “Chrome, Windows, Desktop”), and two labels:</p>
 <ul>
 <li>A visit label, made fresh each time a page opens and kept only in that page’s memory. It lets us see that one visit picked a file and then connected.</li>
-<li>A daily visitor label, a scrambled fingerprint of your network address and browser mixed with a secret that changes every day and is then thrown away. It lets us count people per day without cookies. Nobody, us included, can turn it back into an address or link two days together.</li>
+<li>A daily visitor label, a scrambled fingerprint of your network address and browser mixed with a secret that changes every day and is deleted after two days. It lets us count people per day without cookies. Nobody, us included, can turn it back into an address or link two days together.</li>
 </ul>
 <p>Search engines, link previews and other bots are not counted.</p>
 

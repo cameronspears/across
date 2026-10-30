@@ -102,7 +102,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 <tbody>
 <tr><th scope="row">The person you send to</th><td>Yes</td><td>Yes</td><td>Only if you turn off <b>Hide my IP address</b></td></tr>
 <tr><th scope="row">Our server (on Vercel)</th><td class="no">No</td><td class="no">No, only its hash</td><td>Yes, as every website does. Our database stores only a salted hash of it, for rate limits, and the salt changes daily.</td></tr>
-<tr><th scope="row">Our usage stats (PostHog)</th><td class="no">No, only its size, rounded, and its kind, like “video”</td><td class="no">No</td><td class="no">No, only your country</td></tr>
+<tr><th scope="row">Our usage stats (PostHog)</th><td class="no">No, only its size, rounded, its kind, like “video”, and a common extension like <code>pdf</code></td><td class="no">No</td><td class="no">No, only your country</td></tr>
 <tr><th scope="row">The relay (Cloudflare)</th><td class="no">No, only encrypted bytes</td><td class="no">No</td><td>Yes, when it carries your transfer</td></tr>
 <tr><th scope="row">Anyone else on the network</th><td class="no">No, it’s encrypted</td><td class="no">No</td><td>They see that you connected, like any traffic</td></tr>
 </tbody>
@@ -116,7 +116,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 
 <h2>What we don’t do</h2>
 <ul>
-<li>No accounts, no ads, no cookies, and no third-party scripts. The only thing the page saves on your device is your Hide my IP setting (and your choice to turn off usage stats, if you make it).</li>
+<li>No accounts, no ads, no cookies, and no third-party scripts. The page saves only your Hide my IP setting (and your choice to turn off usage stats, if you make it). To receive a file it also installs a small helper (a service worker) that streams the file into your downloads. The helper stores nothing.</li>
 <li>We count how Across is used (for example how many transfers finish, how big they are, and whether they went through the relay), never what is in them or who sent them. <a href="privacy">Here is exactly what we collect</a>, and how to turn it off.</li>
 <li>No file storage. There’s nowhere on our side to put one.</li>
 <li>The page’s security policy (CSP) stops it loading code from anywhere else, or sending data to any website but this one. The only other outside connections are the WebRTC ones described above.</li>
