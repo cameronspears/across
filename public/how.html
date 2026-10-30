@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#fafafa">
+<title>How Across works</title>
+<meta name="description" content="What happens to your file, who can see what, and how to check it yourself.">
+<meta property="og:title" content="How Across works">
+<meta property="og:description" content="What happens to your file, who can see what, and how to check it yourself.">
+<meta property="og:url" content="https://acrossfile.com/how">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='2.5' width='19' height='19' rx='6'/%3E%3Cpath d='M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3'/%3E%3C/svg%3E">
+<style>
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --r:16px;--s1:4px;--s2:8px;--s3:16px;--s4:24px;--s5:48px;--s6:80px;
+  color-scheme:light;
+  --bg:oklch(98.6% 0 0);
+  --strong:oklch(14% 0 0);--text:oklch(25% 0 0);--muted:oklch(43% 0 0);
+  --rule:oklch(0% 0 0 / .08);--fill:oklch(0% 0 0 / .045);
+  --card:oklch(100% 0 0 / .8);--card-rim:oklch(0% 0 0 / .07);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;color:var(--text);font:400 16px/1.6 var(--font);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+::selection{background:color-mix(in oklch,var(--strong) 26%,transparent);color:var(--strong)}
+b,strong{color:var(--strong);font-weight:600}
+a{color:var(--strong);text-underline-offset:3px;text-decoration-thickness:1px;overflow-wrap:anywhere}
+:focus-visible{outline:2px solid var(--strong);outline-offset:3px}
+.wrap{width:100%;max-width:688px;margin:0 auto;padding-inline:max(var(--s3),env(safe-area-inset-left)) max(var(--s3),env(safe-area-inset-right))}
+.bar{padding-top:max(var(--s3),env(safe-area-inset-top))}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
+.mark{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:var(--strong);text-decoration:none;font-weight:600;font-size:15px}
+.mark svg{width:22px;height:22px;flex:none}
+.cta{display:inline-flex;align-items:center;min-height:40px;padding:0 var(--s3);border-radius:999px;background:var(--strong);color:oklch(99.5% 0 0);text-decoration:none;font-size:14px;font-weight:600}
+main{flex:1;padding-block:var(--s5) var(--s6)}
+h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px);line-height:1.06;letter-spacing:-.025em;text-wrap:balance}
+.lead{margin:var(--s3) 0 0;color:var(--muted);font-size:18px;max-width:34em;text-wrap:pretty}
+h2{margin:var(--s5) 0 var(--s2);color:var(--strong);font-weight:600;font-size:21px;letter-spacing:-.01em}
+p,ul,ol{margin:var(--s2) 0 0;text-wrap:pretty}
+ul,ol{padding-left:1.2em}
+li+li{margin-top:var(--s2)}
+.steps{counter-reset:step;list-style:none;padding:0}
+.steps li{position:relative;padding-left:40px}
+.steps li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;background:var(--fill);color:var(--strong);font-size:13px;font-weight:600;display:grid;place-items:center}
+.scroll{overflow-x:auto;margin-top:var(--s3);border-radius:var(--r);box-shadow:inset 0 0 0 1px var(--card-rim);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:12px 14px;border-bottom:1px solid var(--rule)}
+tr:last-child th,tr:last-child td{border-bottom:0}
+thead th{color:var(--muted);font-weight:500;font-size:13px}
+tbody th{color:var(--strong);font-weight:600;width:28%}
+.no{color:var(--muted)}
+code,pre{font-family:var(--mono);font-size:14px}
+code{background:var(--fill);padding:1px 5px;border-radius:5px}
+pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--fill);overflow-x:auto;white-space:pre}
+.foot{padding-block:var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));color:var(--muted);font-size:13px;border-top:1px solid var(--rule)}
+.foot .wrap{display:flex;justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header class="bar">
+<div class="wrap">
+<a class="mark" href="./"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="6"/><path d="M8 10h8m-3-3 3 3-3 3M16 15H8m3 3-3-3 3-3" stroke-width="1.6"/></svg>Across</a>
+<a class="cta" href="./">Send a file</a>
+</div>
+</header>
+
+<main>
+<div class="wrap">
+<h1>How Across works</h1>
+<p class="lead">Your file goes from your browser straight to theirs, encrypted the whole way. Our server only introduces the two browsers, and it never gets what it would need to read the file. Here’s exactly how, and how to check.</p>
+
+<h2>What happens when you send a file</h2>
+<ol class="steps">
+<li>You pick a file. It stays on your device. Your browser makes a random secret and puts it in the link, after the <code>#</code>.</li>
+<li>Browsers never send the part after <code>#</code> to a website, so our server never sees the secret. It sees only a scrambled fingerprint of it (a SHA-256 hash), which it uses as a meeting-room name.</li>
+<li>When the other person opens the link, the two browsers swap three short setup messages through that room. These say how to reach each other, not what the file is.</li>
+<li>The browsers connect with WebRTC, the same technology video calls use. The connection is encrypted with keys made on the two devices.</li>
+<li>Before any file data moves, each browser proves it knows the secret, in a way tied to this exact encrypted connection. If anyone sat in the middle, including our server, the proofs wouldn’t match and the page would stop.</li>
+<li>The file streams straight into the receiver’s download. It is never uploaded to us or stored anywhere along the way.</li>
+</ol>
+
+<h2>The six-letter code</h2>
+<p>Instead of the link, the receiver can type a code like <code>PZK MFS</code>. Six letters are too few to be a secret on their own, so only the first two reach our server, to find the sender’s room. The other four never leave the two browsers. They’re checked with <a href="https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/">CPace</a>, a standard method for proving you both know a short code without revealing it. Anyone without the code, our server included, gets one guess per try (about 1 in 130,000). After three wrong guesses, the sender’s page retires the code.</p>
+
+<h2>Who can see what</h2>
+<div class="scroll">
+<table>
+<thead><tr><th scope="col"></th><th scope="col">The file and its name</th><th scope="col">The link’s secret</th><th scope="col">Your IP address</th></tr></thead>
+<tbody>
+<tr><th scope="row">The person you send to</th><td>Yes</td><td>Yes</td><td>Only if you turn off <b>Hide my IP address</b></td></tr>
+<tr><th scope="row">Our server (on Vercel)</th><td class="no">No</td><td class="no">No, only its hash</td><td>Yes, as every website does. Our database stores only a salted hash of it, for rate limits, and the salt changes daily.</td></tr>
+<tr><th scope="row">The relay (Cloudflare)</th><td class="no">No, only encrypted bytes</td><td class="no">No</td><td>Yes, when it carries your transfer</td></tr>
+<tr><th scope="row">Anyone else on the network</th><td class="no">No, it’s encrypted</td><td class="no">No</td><td>They see that you connected, like any traffic</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Hiding your IP address</h2>
+<p><b>Hide my IP address</b> is on by default. Your browser then connects only through an encrypted relay run by Cloudflare, so the other person sees the relay’s address, not yours. The page also checks every setup message before sending it, and won’t send one that contains your address.</p>
+<p>If you turn it off, the browsers connect directly, which is often faster but shows each of you the other’s IP address. To find its public address, your browser asks STUN servers run by Cloudflare and Google.</p>
+<p>On the same Wi-Fi, the browsers also try a local connection using temporary <code>.local</code> names, so the file doesn’t leave your network. That reveals nothing outside it.</p>
+
+<h2>What we don’t do</h2>
+<ul>
+<li>No accounts, no ads, no analytics, no cookies, and no third-party scripts. The only thing the page saves on your device is your Hide my IP setting.</li>
+<li>No file storage. There’s nowhere on our side to put one.</li>
+<li>The page’s security policy (CSP) stops it loading code from anywhere else, or sending data to any website but this one. The only other outside connections are the WebRTC ones described above.</li>
+</ul>
+
+<h2>Check it yourself</h2>
+<p>Across is open source under the MIT license: <a href="https://github.com/cameronspears/across">github.com/cameronspears/across</a>. The whole app is one file, <code>public/index.html</code>, plus a few small server functions. You can confirm the live site runs that exact file:</p>
+<pre>curl -s https://acrossfile.com/ | shasum -a 256</pre>
+<p>Compare the result with <code>shasum -a 256 public/index.html</code> in the repository. In your browser’s developer tools, the Network tab shows every request the page makes. You’ll see the setup messages and no file data.</p>
+
+<h2>What it can’t protect against</h2>
+<ul>
+<li>Anyone who gets the link or the code can download the file while your page is open. Share it like a password, and close the tab when you’re done.</li>
+<li>Across can’t tell whether a file is safe. Only open files from people you trust.</li>
+<li>A compromised device or browser extension on either end can see the file, as it could with any app.</li>
+</ul>
+<p>Found a problem? Please <a href="https://github.com/cameronspears/across/security/advisories/new">report it privately</a>.</p>
+</div>
+</main>
+
+<footer class="foot"><div class="wrap"><span>Files are never stored on a server.</span><a href="https://github.com/cameronspears/across">Source code</a></div></footer>
+</body>
+</html>

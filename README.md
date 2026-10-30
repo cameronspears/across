@@ -2,6 +2,8 @@
 
 Send a file from one browser to another. There is no size limit and no account. The file, its name, and the secret in the link never reach the server. By default, neither person learns the other's IP address.
 
+Live at https://acrossfile.com. A plain-language explanation for users is at https://acrossfile.com/how (`public/how.html`). MIT licensed; see `LICENSE`. To report a security problem, see `SECURITY.md`.
+
 ## How it works
 
 - The file travels over an encrypted WebRTC data channel between the two browsers.
@@ -53,6 +55,7 @@ Three parties see more than the other person does:
 ## Files
 
 - `public/index.html` is the whole app: markup, style, and script.
+- `public/how.html` explains to users how it works and who sees what. It has no script. The CSP allows the inline blocks of both pages.
 - `public/sw.js` is a service worker that turns the incoming bytes into a normal browser download.
 - `api/code.js` holds a code's first two letters for the sender's room, with `lib/codes.js`.
 - `api/signal.js` passes handshake messages. It validates every message (at most 8 KB) and stores it with `lib/mailbox.js`. Each client (an IPv4 address or IPv6 /64) gets `SIGNAL_POSTS_PER_MIN` posts and `SIGNAL_POLLS_PER_MIN` polls a minute, then `429` with `Retry-After`, so one address can't fill Redis or hold its connections. `lib/limit.js` keeps these counters, and the relay's, under a salted hash of the address.

@@ -11,12 +11,14 @@ import * as code from './api/code.js';
 const PORT = Number(process.env.PORT) || 8080;
 const read = (file) => readFileSync(new URL(file, import.meta.url));
 const html = read('./public/index.html');
+const how = read('./public/how.html');
 const pages = {
   '/': { type: 'text/html; charset=utf-8', body: html },
+  '/how': { type: 'text/html; charset=utf-8', body: how },
   '/sw.js': { type: 'text/javascript; charset=utf-8', body: read('./public/sw.js') },
 };
 const functions = { '/api/signal': signal, '/api/ice': ice, '/api/guard': guard, '/api/code': code };
-const rules = headerRules(html.toString('utf8')).map((r) => ({ ...r, match: new RegExp(`^${r.source}$`) }));
+const rules = headerRules(html.toString('utf8'), how.toString('utf8')).map((r) => ({ ...r, match: new RegExp(`^${r.source}$`) }));
 const headersFor = (path) => rules.filter((r) => r.match.test(path)).flatMap((r) => r.headers.map((h) => [h.key, h.value]));
 
 async function api(fn, path, req, res) {

@@ -14,5 +14,5 @@ export const config: VercelConfig = {
   redirects: [
     { source: '/:path*', has: [{ type: 'host', value: 'www.acrossfile.com' }], destination: 'https://acrossfile.com/:path*', permanent: true },
   ],
-  headers: headerRules(readFileSync('public/index.html', 'utf8')),
+  headers: headerRules(...['public/index.html', 'public/how.html'].map((f) => readFileSync(f, 'utf8'))),
 };
