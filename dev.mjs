@@ -45,7 +45,8 @@ async function api(fn, path, req, res) {
     signal: aborted.signal,
     ...(req.method !== 'GET' && req.method !== 'HEAD' && { body: Readable.toWeb(req), duplex: 'half' }),
   });
-  const response = await handler(request).catch((err) => {
+  // like Vercel, handlers get a second argument (its request context)
+  const response = await handler(request, { waitUntil() {} }).catch((err) => {
     console.error(err);
     return new Response(null, { status: 500 });
   });
