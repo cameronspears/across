@@ -338,7 +338,7 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 <input id="link" readonly spellcheck="false" autocomplete="off">
 <div class="linkrow"><button id="copy" class="btn primary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6A1.5 1.5 0 0 0 14 4.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Copy</span></button>
 <button id="share" class="btn ghost" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3.5m-4 4 4-4 4 4"/><path d="M8 10.5H6.5A1.5 1.5 0 0 0 5 12v7.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V12a1.5 1.5 0 0 0-1.5-1.5H16"/></svg>Share</button><small id="copied" aria-live="polite"></small></div>
-<p class="keep">Keep this page open until the download finishes. On a phone, keep it on&nbsp;screen.</p>
+<p class="keep">Keep this page open until the download finishes. On a phone, come back here after you send the link: the phone pauses this page while you’re in another&nbsp;app.</p>
 </div>
 <p id="qr" hidden><small>Or scan it with the other device’s camera.</small></p>
 </div>
@@ -377,7 +377,8 @@ const GATHER_MS = 1500;    // by then, settle for a relay candidate without the 
 const GATHER_MAX_MS = 5000; // and by then for anything
 const RELAY_REUSE_MS = 3_600_000; // credentials last 8 hours, so a connection made with them has at least 7
 const RELAY_RETRY_MS = 30_000;
-const HELLO_MS = 8000, HELLOS = 15;
+// a sender on a phone often switches apps to send the link, and their page sleeps until they come back
+const HELLO_MS = 8000, HELLOS = 225; // 30 minutes
 const PROVE_MS = 20000, UNPROVEN = 8;
 const LOCAL_MS = 15000; // a local-only connection that hasn't proven itself by then isn't on the same network
 const RID = /^[a-z0-9]{16}$/;
@@ -539,13 +540,27 @@ function parseSignal(env) {
   return sdp && { from: env.from, t, sdp, lan: desc(env.data.lan) };
 }
 
+// A phone freezes a page in the background, and the poll it left open may never answer, so coming
+// back on screen drops that poll and asks again at once.
 function signaling(room, me, onSignal) {
   const ctl = new AbortController();
+  let poll, wait = 1000;
+  const back = () => {
+    if (document.visibilityState !== 'visible' || ctl.signal.aborted) return;
+    wait = 0;
+    poll?.abort();
+  };
   addEventListener('pagehide', () => ctl.abort());
+  document.addEventListener('visibilitychange', back);
+  ctl.signal.addEventListener('abort', () => {
+    document.removeEventListener('visibilitychange', back);
+    poll?.abort();
+  });
   (async () => {
-    for (let wait = 1000; !ctl.signal.aborted;) {
+    while (!ctl.signal.aborted) {
       try {
-        const r = await fetch(`api/signal?room=${room}&me=${me}`, { signal: ctl.signal });
+        poll = new AbortController();
+        const r = await fetch(`api/signal?room=${room}&me=${me}`, { signal: poll.signal });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const list = await r.json();
         if (ctl.signal.aborted) return;
@@ -557,7 +572,7 @@ function signaling(room, me, onSignal) {
       } catch {
         if (ctl.signal.aborted) return;
         await sleep(wait);
-        wait = Math.min(wait * 2, 10_000);
+        wait = Math.min(Math.max(wait * 2, 1000), 10_000);
       }
     }
   })();
@@ -1120,26 +1135,30 @@ async function send(file, how) {
   box.value = link;
   box.onfocus = () => box.select();
   let copied;
+  // on a phone, sending the link means leaving for another app, and this page sleeps until they're back
+  const phone = matchMedia('(pointer: coarse)').matches;
+  const comeBack = 'Send it, then come back to this page. The file can’t leave while you’re in another app.';
   $('#copy').onclick = async () => {
     const ok = await copy(box);
     track('link_copied', { ok });
     if (ok) $('#copy').focus(); // copying selected the field; keyboard users stay on the button
-    $('#copied').textContent = ok ? 'Copied.'
-      : matchMedia('(pointer: coarse)').matches ? 'Copying was blocked. Touch and hold the link in the box, then choose Copy.'
+    $('#copied').textContent = ok ? (phone ? `Copied. ${comeBack}` : 'Copied.')
+      : phone ? 'Copying was blocked. Touch and hold the link in the box, then choose Copy.'
         : `Copying was blocked. The link is selected: press ${/Mac/.test(navigator.userAgent) ? '⌘' : 'Ctrl'}+C.`;
     $('#copy').classList.toggle('copied', ok);
     $('#copy span').textContent = ok ? 'Copied' : 'Copy';
     clearTimeout(copied);
     if (ok) copied = setTimeout(() => {
-      $('#copied').textContent = '';
+      if (!phone) $('#copied').textContent = '';
       $('#copy').classList.remove('copied');
       $('#copy span').textContent = 'Copy';
     }, 2000);
   };
   if (navigator.share) {
     $('#share').hidden = false;
-    $('#share').onclick = () => track('link_shared') || navigator.share({ url: link }).catch((err) =>
-      err.name !== 'AbortError' && ($('#copied').textContent = "Sharing didn't work here. Use Copy instead."));
+    $('#share').onclick = () => track('link_shared') || navigator.share({ url: link }).then(() => {
+      if (phone) $('#copied').textContent = comeBack;
+    }, (err) => err.name !== 'AbortError' && ($('#copied').textContent = "Sharing didn't work here. Use Copy instead."));
   }
   const code = qr(link);
   if (code) {
@@ -1192,8 +1211,12 @@ async function send(file, how) {
       if (!r?.ok) return;
       const sig = listen(await roomOf(key), { code });
       const renew = setInterval(() => claim(false).catch(() => {}), CODE_RENEW_MS);
+      // the interval stood still while the page was frozen, so the code may be close to lapsing
+      const back = () => document.visibilityState === 'visible' && claim(false).catch(() => {});
+      document.addEventListener('visibilitychange', back);
       const end = () => {
         clearInterval(renew);
+        document.removeEventListener('visibilitychange', back);
         sig.stop();
         claim(true).catch(() => {});
       };
@@ -1559,7 +1582,7 @@ async function receive(pass) {
   const slow = setTimeout(() => !meta && phase !== 'failed' && phase !== 'blocked' &&
     say(config === LAN ? `Looking for the sender. ${relayNote()} Until then, hidden mode works only on the same Wi-Fi; ` +
       'turning off Hide my IP address connects from anywhere.'
-      : 'Looking for the sender. Their page must still be open, and on screen if they are on a phone.', 'wait'), 6000);
+      : 'Waiting for the sender to come back to Across. If they’re on a phone, ask them to switch back to it. It connects as soon as they do.', 'wait'), 6000);
   const room = pass.secret ? await roomOf(pass.secret) : await roomOfCode();
   if (!room) return;
   privacyBox(() => !sink && phase !== 'saving' && start());
@@ -1619,7 +1642,7 @@ async function receive(pass) {
   }
 
   function sayHello() {
-    if (++hellos > HELLOS) return reject('Could not reach the sender. Their tab must be open. Reload to try again.');
+    if (++hellos > HELLOS) return reject('Could not reach the sender. Their Across page must be open and on screen. Reload to try again.');
     sig.post('s', { t: 'hello' });
   }
 
