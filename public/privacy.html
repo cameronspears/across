@@ -91,7 +91,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 <li>Your file, any part of it, or its name. The file goes straight from one browser to the other, encrypted.</li>
 <li>The link’s secret or the six-letter code.</li>
 <li>Your IP address, precise location, or anything that follows you from one day to the next.</li>
-<li>Cookies, browser fingerprinting, ad IDs, or session recordings. There are no third-party scripts on the page.</li>
+<li>Cookies, browser fingerprinting, ad IDs, or session recordings. The only outside code on the page is Vercel’s, below, and it loads from this site.</li>
 </ul>
 
 <h2>What we count</h2>
@@ -115,8 +115,11 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 </ul>
 <p>Search engines, link previews and other bots are not counted.</p>
 
+<h2>Page views and speed</h2>
+<p>Across runs on <a href="https://vercel.com">Vercel</a>. Two small Vercel scripts, served from this site, count page views and measure how fast pages load: which page (never the link’s secret or the code), the website that sent you, your country, browser, operating system and device type, and timings like how long the page took to show. Vercel counts people per day without cookies, the same way as above. It keeps this under <a href="https://vercel.com/legal/privacy-policy">its privacy policy</a>. The same switch turns it off.</p>
+
 <h2>Who can see it</h2>
-<p>Only the people who run Across, in PostHog. We don’t sell or share it, and it isn’t used for ads. PostHog keeps it under <a href="https://posthog.com/privacy">its privacy policy</a>, for as long as our plan keeps data.</p>
+<p>Only the people who run Across, in PostHog and Vercel. We don’t sell or share it, and it isn’t used for ads. PostHog keeps it under <a href="https://posthog.com/privacy">its privacy policy</a>, for as long as our plan keeps data.</p>
 
 <h2>Turn it off</h2>
 <p>Nothing is sent if your browser has <b>Global Privacy Control</b> or <b>Do Not Track</b> on. You can also switch it off here, for this browser:</p>
@@ -157,6 +160,18 @@ show();
 // one anonymous page view, as above
 (() => {
   if (off || blocked) return;
+  // Vercel Web Analytics and Speed Insights (page views and load speed), on the live site only and under
+  // the same opt-outs. Each report carries the page's path alone, never the #secret or ?query.
+  if (location.hostname === 'acrossfile.com') {
+    for (const [q, dir] of [['va', 'insights'], ['si', 'speed-insights']]) {
+      window[q] = (...a) => (window[q + 'q'] ||= []).push(a);
+      window[q]('beforeSend', (e) => ({ ...e, url: e.url.split(/[?#]/)[0] }));
+      const s = document.createElement('script');
+      s.src = `/_vercel/${dir}/script.js`;
+      s.defer = true;
+      document.head.append(s);
+    }
+  }
   try {
     const b = crypto.getRandomValues(new Uint8Array(16));
     for (let i = 5, t = Date.now(); i >= 0; i--, t = Math.floor(t / 256)) b[i] = t % 256;

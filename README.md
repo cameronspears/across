@@ -222,7 +222,8 @@ The guard can't stop everything:
 
 The page counts how it is used: page views, files picked, connections, and transfers started, finished or failed, with sizes rounded to two figures, the file's kind, how it connected (same network, direct or relay), how long it took and why it failed. It never sends a file name, link, code or address. `public/privacy.html` lists everything for the people using it.
 
-- The page posts each event to `/api/event` with `navigator.sendBeacon`. No third-party script loads, so the CSP is unchanged: the browser only ever talks to this site.
+- The page posts each event to `/api/event` with `navigator.sendBeacon`. The browser only ever talks to this site.
+- On acrossfile.com only, each page also loads Vercel Web Analytics and Speed Insights from `/_vercel/…` under the same opt-outs. A `beforeSend` hook cuts every reported URL to its path, so the link's `#secret` and any query never leave. The CSP allows them with `'strict-dynamic'`: only the hashed inline scripts can add a script.
 - `api/event.js` checks every field against a fixed list per event, with types and ranges, and drops the whole event if anything is off. A changed page still can't send a name or a link through it.
 - It adds country (from Vercel's `x-vercel-ip-country`), coarse browser, OS and device type, and a visitor id: a hash of the client's network and user agent with a salt that changes daily, kept in Redis for two days. That counts people per day without cookies and can't link days. Each page load also makes a random session id, kept only in memory.
 - It forwards to PostHog as personless events (`$process_person_profile: false`) with GeoIP off, so PostHog never sees the visitor's address. Bots, Global Privacy Control and Do Not Track send nothing. The privacy page has a switch that turns stats off for that browser.
