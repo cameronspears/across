@@ -9,6 +9,7 @@ export const config: VercelConfig = {
     'api/signal.js': { maxDuration: 30 },
     'api/ice.js': { maxDuration: 10 },
     'api/guard.js': { maxDuration: 10 },
+    'api/code.js': { maxDuration: 10 },
   },
   redirects: [
     { source: '/:path*', has: [{ type: 'host', value: 'www.acrossfile.com' }], destination: 'https://acrossfile.com/:path*', permanent: true },

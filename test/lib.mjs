@@ -54,7 +54,7 @@ export async function watch(page, name, log) {
   page.on('console', (m) => (m.type() === 'error' || m.type() === 'warn') && log.push(`[${name} console.${m.type()}] ${m.text()}`));
   page.on('pageerror', (e) => log.push(`[${name} pageerror] ${e.message}`));
   // a download frame reports ERR_ABORTED when Chrome hands its response to the downloads folder
-  page.on('requestfailed', (r) => !r.url().includes('/api/signal') && !r.url().includes('/dl/') && log.push(`[${name} requestfailed] ${r.url()} ${r.failure()?.errorText}`));
+  page.on('requestfailed', (r) => !r.url().includes('/api/signal') && !r.url().includes('/api/code') && !r.url().includes('/dl/') && log.push(`[${name} requestfailed] ${r.url()} ${r.failure()?.errorText}`));
   page.posts = [];
   // Firefox's driver can't read request bodies, so its pages record none
   const body = (r) => { try { return JSON.parse(r.postData() || 'null'); } catch { return null; } };

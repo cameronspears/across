@@ -6,6 +6,7 @@ import { headerRules } from './lib/headers.js';
 import * as signal from './api/signal.js';
 import * as ice from './api/ice.js';
 import * as guard from './api/guard.js';
+import * as code from './api/code.js';
 
 const PORT = Number(process.env.PORT) || 8080;
 const read = (file) => readFileSync(new URL(file, import.meta.url));
@@ -14,7 +15,7 @@ const pages = {
   '/': { type: 'text/html; charset=utf-8', body: html },
   '/sw.js': { type: 'text/javascript; charset=utf-8', body: read('./public/sw.js') },
 };
-const functions = { '/api/signal': signal, '/api/ice': ice, '/api/guard': guard };
+const functions = { '/api/signal': signal, '/api/ice': ice, '/api/guard': guard, '/api/code': code };
 const rules = headerRules(html.toString('utf8')).map((r) => ({ ...r, match: new RegExp(`^${r.source}$`) }));
 const headersFor = (path) => rules.filter((r) => r.match.test(path)).flatMap((r) => r.headers.map((h) => [h.key, h.value]));
 
