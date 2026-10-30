@@ -1,5 +1,5 @@
 // node limits.mjs <project>: RELAY_BUDGET_GB above 1000, or not a number of at least 0, falls back to 900 and logs
-// why; an unusable RELAY_MINTS_PER_HOUR falls back to 60. A refusal says how many seconds until the next hour. Read through /api/guard's budgetGB and /api/ice's 429.
+// why; an unusable RELAY_MINTS_PER_HOUR falls back to 20. A refusal says how many seconds until the next hour. Read through /api/guard's budgetGB and /api/ice's 429.
 import { iceInstance, guardInstance, stub } from './ice-env.mjs';
 
 const [project] = process.argv.slice(2);
@@ -31,11 +31,11 @@ for (const raw of [undefined, '-5', 'twelve']) {
   const client = `192.0.2.${Math.floor(Math.random() * 250)}`;
   const statuses = [];
   let last;
-  for (let i = 0; i < 61; i++) statuses.push((last = await ice(client)).status);
+  for (let i = 0; i < 21; i++) statuses.push((last = await ice(client)).status);
   const retry = last.body?.retry;
   const warned = lines.some((l) => l.includes('RELAY_MINTS_PER_HOUR'));
-  expect(statuses.slice(0, 60).every((s) => s === 200) && statuses[60] === 429 && retry > 0 && retry <= 3600 && warned === (raw !== undefined),
-    `RELAY_MINTS_PER_HOUR=${JSON.stringify(raw)} -> 60 mints then 429, retry in ${retry}s: ${[...new Set(statuses)].join(',')}${warned ? `, logged: ${lines[0]}` : ''}`);
+  expect(statuses.slice(0, 20).every((s) => s === 200) && statuses[20] === 429 && retry > 0 && retry <= 3600 && warned === (raw !== undefined),
+    `RELAY_MINTS_PER_HOUR=${JSON.stringify(raw)} -> 20 mints then 429, retry in ${retry}s: ${[...new Set(statuses)].join(',')}${warned ? `, logged: ${lines[0]}` : ''}`);
 }
 console.log(failures.length ? `FAIL (${failures.length})` : 'PASS');
 process.exit(failures.length ? 1 : 0);

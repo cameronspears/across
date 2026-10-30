@@ -49,8 +49,8 @@ let replies = await guard(20);
 let s = await stub('state');
 const t0 = s.usageQueries[0]?.at ?? realNow();
 expect(s.usageQueries.length === 1, `20 concurrent guard calls on an empty store make one usage query: ${s.usageQueries.length}`);
-expect(replies.every((r) => Object.keys(r.body).sort().join() === 'budgetGB,live,revoked,state,usedGB'), `guard answers exactly state, usedGB, budgetGB, live, revoked: ${Object.keys(replies[0].body)}`);
-expect(reports(replies, { state: 'open', usedGB: 100, budgetGB: 900, live: 0 }) && revokedBy(replies) === 0, `every guard call reports open at 100 of 900 GB, nothing live, nothing revoked: ${answers(replies)}`);
+expect(replies.every((r) => Object.keys(r.body).sort().join() === 'budgetGB,dailyGB,live,revoked,state,todayGB,usedGB'), `guard answers exactly state, usedGB, budgetGB, todayGB, dailyGB, live, revoked: ${Object.keys(replies[0].body)}`);
+expect(reports(replies, { state: 'open', usedGB: 100, budgetGB: 900, todayGB: 0, dailyGB: 60, live: 0 }) && revokedBy(replies) === 0, `every guard call reports open at 100 of 900 GB, nothing live, nothing revoked: ${answers(replies)}`);
 const q = s.usageQueries[0]?.variables;
 expect(q?.account === 'test-account' && q.to === day(realNow()) && q.from === day(realNow() - 30 * 86_400_000),
   `usage query covers the last 31 UTC days for the account: ${JSON.stringify(q)}`);
@@ -70,7 +70,7 @@ const live = s.mints.map((m) => m.username);
 
 const cost = local ? await commands(() => g()) : { result: await g() };
 s = await stub('state');
-expect(reports([cost.result], { state: 'open', usedGB: 100, budgetGB: 900, live: 30 }) && cost.result.body.revoked === 0, `guard on a fresh reading reports 30 live: ${answers([cost.result])}`);
+expect(reports([cost.result], { state: 'open', usedGB: 100, budgetGB: 900, todayGB: 0, dailyGB: 60, live: 30 }) && cost.result.body.revoked === 0, `guard on a fresh reading reports 30 live: ${answers([cost.result])}`);
 expect(s.usageQueries.length === 1 && s.mints.length === 30 && s.revokes.length === 0, 'guard on a fresh reading makes no Cloudflare call');
 if (local) expect(cost.total <= 3, `guard on a fresh reading costs ${cost.total} Redis commands: ${cost.detail}`);
 
@@ -91,7 +91,7 @@ expect(s.revokes.every((u) => live.includes(u)), `nothing revoked that was not h
 await sleep(CLAIM_MS + 500);
 replies = await guard(20);
 s = await stub('state');
-expect(reports(replies, { state: 'closed', usedGB: 900, budgetGB: 900, live: 5 }), `every guard call reports closed at 900 of 900 GB with 5 live: ${answers(replies)}`);
+expect(reports(replies, { state: 'closed', usedGB: 900, budgetGB: 900, todayGB: 0, dailyGB: 60, live: 5 }), `every guard call reports closed at 900 of 900 GB with 5 live: ${answers(replies)}`);
 expect(revokedBy(replies) === 1 && calls(live[3]) === 2, `20 concurrent guard calls retry the revoke that failed once and report 1 revoked between them: ${revokedBy(replies)} reported, ${calls(live[3])} calls`);
 expect(live.slice(4, 9).every((u) => calls(u) === 2), `each revoke that still fails is retried exactly once: ${live.slice(4, 9).map(calls).join('')}`);
 expect(s.usageQueries.length === 2, `no usage query while the closed reading is fresh: ${s.usageQueries.length - 2}`);
@@ -107,7 +107,7 @@ const quiet = s.revokes.length;
 replies = await guard(20);
 s = await stub('state');
 expect(s.usageQueries.length === 3, `20 concurrent guard calls make one usage query when it fails: ${s.usageQueries.length - 2}`);
-expect(reports(replies, { state: 'unknown', usedGB: null, budgetGB: 900, live: 5 }) && revokedBy(replies) === 0, `with the usage query failing every guard call reports unknown: ${answers(replies)}`);
+expect(reports(replies, { state: 'unknown', usedGB: null, budgetGB: 900, todayGB: null, dailyGB: 60, live: 5 }) && revokedBy(replies) === 0, `with the usage query failing every guard call reports unknown: ${answers(replies)}`);
 expect(s.revokes.length === quiet, `unknown after one failed query revokes nothing: ${s.revokes.length - quiet} revoke calls`);
 replies = await ice(5, 240);
 s = await stub('state');
@@ -120,7 +120,7 @@ skew = BLIND_MS;
 replies = await guard(20);
 s = await stub('state');
 expect(s.usageQueries.length === 4, `5 minutes later, one more failed usage query: ${s.usageQueries.length - 3}`);
-expect(reports(replies, { state: 'unknown', usedGB: null, budgetGB: 900, live: 0 }), `still unknown: ${answers(replies)}`);
+expect(reports(replies, { state: 'unknown', usedGB: null, budgetGB: 900, todayGB: null, dailyGB: 60, live: 0 }), `still unknown: ${answers(replies)}`);
 expect(revokedBy(replies) === 5 && live.slice(4, 9).every((u) => calls(u) === 3),
   `after 5 minutes of failed usage queries the guard revokes every live credential once: ${revokedBy(replies)} reported, ${live.slice(4, 9).map(calls).join('')} calls`);
 const done = s.revokes.length;

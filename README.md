@@ -5,7 +5,7 @@ Send a file from one browser to another. There is no size limit and no account. 
 ## How it works
 
 - The file travels over an encrypted WebRTC data channel between the two browsers.
-- The server passes three short handshake messages between them and nothing else. Each browser long-polls its own mailbox at `/api/signal`, which is a Redis list that expires after 10 minutes.
+- The server passes three short handshake messages between them and nothing else. Each browser long-polls its own mailbox at `/api/signal`, which is a Redis list that expires after 2 minutes.
 - Before it connects, each browser asks `/api/ice` for short-lived credentials for Cloudflare's TURN relay.
 - The secret after `#` in the link stays in the browser. The server sees only a hash of it, which names the room.
 - Both browsers prove they know the secret with an HMAC bound to the certificates of their own encrypted connection. A server that relays two separate connections sees different certificates on each side, so it can't produce a valid proof. The worst a dishonest server can do is refuse to connect you.
@@ -50,14 +50,14 @@ Three parties see more than the other person does:
 
 - `public/index.html` is the whole app: markup, style, and script.
 - `public/sw.js` is a service worker that turns the incoming bytes into a normal browser download.
-- `api/signal.js` passes handshake messages. It validates every message and stores it with `lib/mailbox.js`.
+- `api/signal.js` passes handshake messages. It validates every message (at most 8 KB) and stores it with `lib/mailbox.js`. Each client (an IPv4 address or IPv6 /64) gets `SIGNAL_POSTS_PER_MIN` posts and `SIGNAL_POLLS_PER_MIN` polls a minute, then `429` with `Retry-After`, so one address can't fill Redis or hold its connections. `lib/limit.js` keeps these counters, and the relay's, under a salted hash of the address.
 - `api/ice.js` hands out relay credentials. `lib/guard.js` decides whether to hand them out, and `lib/relay.js` talks to the relay provider.
 - `api/guard.js` runs the same budget check without handing out a credential, and revokes credentials at the budget.
 - `lib/redis.js` opens Redis connections for the functions.
 - `lib/headers.js` builds the security headers, including the CSP hashes of the page's inline script and style.
 - `vercel.ts` is the Vercel config. `dev.mjs` is the local server.
 - `worker/` is a Cloudflare Worker that calls `/api/guard` every minute. `.vercelignore` keeps it out of the Vercel deployment.
-- `test/` holds the browser tests, which drive the installed Chrome. `sh test/servers.sh` starts a local coturn relay and the dev servers, and `sh test/matrix.sh http://127.0.0.1:8090 <file>` runs a transfer for each combination of the two boxes. `sh test/zipbench.sh http://127.0.0.1:8093 <runs> <file>...` compares compression off and on through a relay capped at 1 MB/s. `test/link.mjs` refuses to run against a local server that serves an older page than the one on disk, since `dev.mjs` reads the page once at startup. `.vercelignore` keeps `test/` out of the deployment too.
+- `test/` holds the browser tests, which drive the installed Chrome. `sh test/servers.sh` starts a local coturn relay and the dev servers, and `sh test/matrix.sh http://127.0.0.1:8090 <file>` runs a transfer for each combination of the two boxes. `sh test/zipbench.sh http://127.0.0.1:8093 <runs> <file>...` compares compression off and on through a relay capped at 1 MB/s. `test/link.mjs` refuses to run against a local server that serves an older page than the one on disk, since `dev.mjs` reads the page once at startup. `.vercelignore` keeps `test/` out of the deployment too. `node test/cf-stub.mjs` stands in for Cloudflare's APIs for `budget.mjs`, `limits.mjs` and `daily.mjs`; `signal-limits.mjs` checks the signaling limits.
 
 ## Run it locally
 
@@ -159,7 +159,7 @@ The worker runs on the Cloudflare Workers free plan and holds no secret.
 	npx wrangler tail
 	```
 
-	Within a minute, each run logs one line, such as `guard 200 {"state":"open","usedGB":12.5,"budgetGB":900,"live":2,"revoked":0}`.
+	Within a minute, each run logs one line, such as `guard 200 {"state":"open","usedGB":12.5,"budgetGB":900,"todayGB":0.4,"dailyGB":60,"live":2,"revoked":0}`.
 
 If `/api/guard` answers anything other than 200, or `APP_URL` is empty, the run throws, and the Cloudflare dashboard lists that cron run as failed.
 
@@ -173,7 +173,7 @@ Cloudflare charges $0.05 per GB that the relay sends to browsers, after the firs
 
 1. A relay provider is configured. If not, it answers `503 {"relay":"off"}`.
 2. This client has asked for fewer than `RELAY_MINTS_PER_HOUR` credentials this hour. If not, it answers `429 {"relay":"busy","retry":<seconds until the next hour>}`.
-3. A usage reading from the last minute says the account's TURN traffic over the last 31 days is under `RELAY_BUDGET_GB`. If not, it answers `503 {"relay":"budget"}`.
+3. A usage reading from the last minute says the account's TURN traffic over the last 31 days is under `RELAY_BUDGET_GB` and today's (UTC) is under `RELAY_DAILY_GB`. If not, it answers `503 {"relay":"budget"}`.
 4. Cloudflare mints the credential. If that call fails, it answers `502 {"relay":"error"}`.
 
 The budget counts the last 31 days, not the calendar month. Cloudflare's docs say "each month" without saying whether that means the calendar month or the billing cycle. Every month of either kind fits inside some 31-day window, so a 31-day budget holds for both.
@@ -197,6 +197,8 @@ At the budget, the guard stops handing out credentials and revokes every unexpir
 | `state` | `open`, `closed`, or `unknown`. |
 | `usedGB` | TURN traffic over the last 31 days in the reading, in GB of 10^9 bytes. `null` when the state is `unknown`. |
 | `budgetGB` | `RELAY_BUDGET_GB`. |
+| `todayGB` | TURN traffic so far this UTC day in the reading. `null` when the state is `unknown`. |
+| `dailyGB` | `RELAY_DAILY_GB`. |
 | `live` | Credentials the guard handed out that have neither expired nor been revoked. |
 | `revoked` | Credentials this call revoked. |
 
@@ -219,7 +221,9 @@ The guard can't stop everything:
 | `CF_ACCOUNT_ID` | `api/ice.js`, `api/guard.js` | Cloudflare account ID, for the usage query. |
 | `CF_ANALYTICS_TOKEN` | `api/ice.js`, `api/guard.js` | API token with Account Analytics Read, for the usage query. |
 | `RELAY_BUDGET_GB` | `api/ice.js`, `api/guard.js` | Relay traffic over the last 31 days, in GB of 10^9 bytes, at which the guard stops. The default is 900, and the most it accepts is 1000, the free allowance. `0` keeps the relay closed. A value above 1000, or one that isn't a number of at least 0, logs an error and uses 900. |
-| `RELAY_MINTS_PER_HOUR` | `api/ice.js` | Credentials one client can get per hour. The default is 12. A value that isn't a number of at least 0 logs an error and uses 12. |
+| `RELAY_DAILY_GB` | `api/ice.js`, `api/guard.js` | Relay traffic in one UTC day at which the guard stops until the next day, so someone burning traffic on purpose costs a day of the relay, not the month. The default is 60, the most it accepts is 1000. |
+| `RELAY_MINTS_PER_HOUR` | `api/ice.js` | Credentials one client can get per hour. The default is 20. A value that isn't a number of at least 0 logs an error and uses 20. |
+| `SIGNAL_POSTS_PER_MIN`, `SIGNAL_POLLS_PER_MIN` | `api/signal.js` | Handshake posts and polls one client can make per minute. The defaults are 180 each. `test/servers.sh` raises them, since every local test comes from one address. |
 | `RELAY` | `api/ice.js`, `api/guard.js` | `cloudflare`, `coturn`, or `none`. Without it, the relay is `cloudflare` when `TURN_KEY_ID` is set and `none` otherwise. |
 | `TURN_SECRET`, `TURN_URL` | `api/ice.js` | With `RELAY=coturn`, the coturn shared secret and a comma-separated list of TURN URLs. coturn credentials can't be revoked and have no budget. |
 | `CF_RTC_BASE`, `CF_API_BASE` | `api/ice.js`, `api/guard.js` | Base URLs of Cloudflare's TURN and GraphQL APIs. Tests point them at a local stub. |
