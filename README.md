@@ -14,6 +14,10 @@ Send a file from one browser to another. There is no size limit and no account. 
 
 ## Getting the link across
 
+- The sender also gets a six-letter code, like `PZK MFS`, to type on the home page of the other device. Saying six letters across a room beats passing a link between two devices. Codes use only consonants, so they never spell a word.
+- A short code can't stand in for the link's secret: a server could try every code in seconds. So the first two letters only name the sender's room, held at `/api/code` for 10 minutes and renewed while the page is open. The other four never leave the two browsers. Both sides run CPace (draft-irtf-cfrg-cpace) on X25519: each turns the code and the connection's certificate fingerprints into the same curve point and does a Diffie-Hellman exchange from it, then proves itself with the key they agree on. Anyone without the code, the server included, gets one guess per connection (1 in 130,321), and watching an exchange doesn't let them test guesses afterwards.
+- After three wrong codes the sender stops offering it and says to send the link instead. That keeps a stranger's chance below 1 in 43,000. Someone typing wrong codes on purpose can kill a code that way, but can't get the file. The link still works.
+- Codes need X25519 in WebCrypto (Chrome 133, Firefox 130, Safari 17). A browser without it shows only the link. `test/code.mjs` covers a right code, a wrong one, an unknown one and a retired one; `SENDER=firefox` runs it with Firefox sending.
 - The sender sees the link in a box with a Copy button, a Share button where the device has a share sheet (phones, Safari, Edge), and a QR code to scan from a phone. The QR encoder is in the page, because the CSP allows no outside scripts. `test/ui.mjs` scans its output back with Chrome's barcode reader at every size it supports.
 - Some browsers and embedded views refuse clipboard access. Copy then tries the older copy command, and if that fails too it leaves the link selected and says how to copy it by hand. Before this, a refused copy did nothing, so pasting gave whatever link was copied last.
 - Both sides hold a screen wake lock while it matters: the sender from the moment it picks a file until a receiver has it, the receiver from Download until the end. A phone that locks its screen pauses the page and the transfer with it.
@@ -50,6 +54,7 @@ Three parties see more than the other person does:
 
 - `public/index.html` is the whole app: markup, style, and script.
 - `public/sw.js` is a service worker that turns the incoming bytes into a normal browser download.
+- `api/code.js` holds a code's first two letters for the sender's room, with `lib/codes.js`.
 - `api/signal.js` passes handshake messages. It validates every message and stores it with `lib/mailbox.js`.
 - `api/ice.js` hands out relay credentials. `lib/guard.js` decides whether to hand them out, and `lib/relay.js` talks to the relay provider.
 - `api/guard.js` runs the same budget check without handing out a credential, and revokes credentials at the budget.

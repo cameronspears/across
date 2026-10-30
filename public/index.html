@@ -158,6 +158,16 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 .sendgrid{display:grid;grid-template-columns:1fr auto;gap:var(--s4);margin-top:var(--s4);padding-top:var(--s4);border-top:1px solid var(--rule)}
 .sendgrid>div{min-width:0}
 .label{display:block;color:var(--muted);font-size:14px;margin-bottom:var(--s2)}
+.code{display:block;margin:0 0 var(--s4);font:600 32px/1.1 var(--mono);letter-spacing:.14em;color:var(--strong)}
+#code-box p{margin:0 0 var(--s4);color:var(--muted);font-size:14px;text-wrap:pretty}
+.enter{margin-top:var(--s4)}
+.enter>div{display:flex;flex-wrap:wrap;gap:var(--s2)}
+#code{width:8.5em;min-width:0;height:42px;padding:0 12px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--strong);
+  font:600 17px var(--mono);letter-spacing:.14em;text-transform:uppercase;transition:background-color .2s var(--out)}
+#code::placeholder{color:var(--muted);opacity:.45}
+@media (hover:hover) and (pointer:fine){#code:hover{background:var(--fill-hover)}}
+#code-msg{display:block;margin-top:var(--s2);color:var(--bad);font-size:14px}
+#code-msg:empty{display:none}
 .linkrow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s2)}
 #link{display:block;width:100%;min-width:0;height:42px;padding:0 12px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--strong);font:500 15px var(--mono);
   text-overflow:ellipsis;transition:background-color .2s var(--out)}
@@ -246,7 +256,7 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 #privacy{animation:arrive .55s var(--spring-soft) .05s both}
 @keyframes arrive{from{opacity:0;transform:translateY(10px) scale(.98)}}
 
-@media (pointer:coarse){.btn,#msg button,#msg a,#link{height:44px}#go{height:52px}}
+@media (pointer:coarse){.btn,#msg button,#msg a,#link,#code{height:44px}#go{height:52px}}
 @media (max-width:600px){
   main{padding-block:var(--s4) var(--s5)}
   .drop{margin-top:var(--s4);padding:var(--s4) var(--s3) var(--s4)}
@@ -288,8 +298,13 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 <span class="drop-sub"><span class="rest">or pick one from your computer</span><span class="over">One file at a time</span><span class="touch">Photos, videos, anything</span></span>
 <span class="btn primary" aria-hidden="true">Choose a file</span>
 </label>
+<form id="enter" class="enter" novalidate>
+<label class="label" for="code">Receiving? Type the code shown on the other&nbsp;screen.</label>
+<div><input id="code" placeholder="BCD FGH" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go"><button class="btn ghost">Receive</button></div>
+<small id="code-msg" aria-live="polite"></small>
+</form>
 <ul class="facts">
-<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg><span>Only someone with the link can open&nbsp;it.</span></li>
+<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg><span>Only someone with the link or code can open&nbsp;it.</span></li>
 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h14m-5-5 5 5-5 5"/></svg><span>Nothing is uploaded. It streams while you’re both&nbsp;here.</span></li>
 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 5 6.5v5c0 4.3 3 7.7 7 9 4-1.3 7-4.7 7-9v-5z"/></svg><span id="ip-fact">Your IP address stays hidden from&nbsp;them.</span></li>
 </ul>
@@ -301,6 +316,7 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 <span class="file-text"><b id="s-name"></b><span id="s-size"></span></span></div>
 <div class="sendgrid">
 <div>
+<div id="code-box" hidden><span class="label">On their device, open <b id="code-host"></b> and type</span><output id="code-out" class="code"></output></div>
 <label class="label" for="link">Send them this link</label>
 <input id="link" readonly spellcheck="false" autocomplete="off">
 <div class="linkrow"><button id="copy" class="btn primary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6A1.5 1.5 0 0 0 14 4.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/></svg><svg class="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span>Copy</span></button>
@@ -391,12 +407,104 @@ async function roomOf(secret) {
 // Proves knowledge of the secret, bound to this exact DTLS connection's
 // certificates. A server relaying two separate connections (a middleman) would
 // see different fingerprints on each side, so its proofs can't match.
+// secret is the link's secret, or the key a code's CPace agreed on.
 async function proof(secret, role, pc, local) {
+  const [s, r] = prints(pc, local);
+  const raw = typeof secret === 'string' ? enc.encode(secret) : secret;
+  const key = await crypto.subtle.importKey('raw', raw, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return hex(await crypto.subtle.sign('HMAC', key, enc.encode(`et1|${role}|${s}|${r}`)));
+}
+
+// the sender's and the receiver's certificate fingerprints
+function prints(pc, local) {
   const fp = (d) => d.sdp.match(/^a=fingerprint:\S+ (\S+)/m)[1].toUpperCase();
   const mine = fp(pc.localDescription), theirs = fp(pc.remoteDescription);
-  const [s, r] = local === 's' ? [mine, theirs] : [theirs, mine];
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  return hex(await crypto.subtle.sign('HMAC', key, enc.encode(`et1|${role}|${s}|${r}`)));
+  return local === 's' ? [mine, theirs] : [theirs, mine];
+}
+
+// ---- codes: six letters to type instead of a link ----
+
+// Consonants only, so a code never spells a word. The first two letters name the sender's room on the
+// server; the other four never leave the two browsers, so a guess can only be tried by connecting.
+const CODE_ABC = 'bcdfghjkmnpqrstvwxz';
+const CODE = /^[bcdfghjkmnpqrstvwxz]{6}$/;
+const CODE_TRIES = 3;          // wrong codes a sender takes before it stops offering one
+const CODE_RENEW_MS = 240_000; // the server forgets a code after 10 minutes unless it's renewed
+const newCode = () => Array.from(crypto.getRandomValues(new Uint32Array(6)), (n) => CODE_ABC[n % 19]).join('');
+const spaced = (code) => `${code.slice(0, 3)} ${code.slice(3)}`.toUpperCase();
+// Chrome 133, Firefox 130 and Safari 17 have X25519; codes need it, links don't
+const X25519 = Promise.resolve().then(() => crypto.subtle.generateKey({ name: 'X25519' }, false, ['deriveBits'])).then(() => true, () => false);
+
+const P = 2n ** 255n - 19n, A = 486662n;
+const pow = (b, e) => {
+  let r = 1n;
+  for (b %= P; e; e >>= 1n, b = b * b % P) if (e & 1n) r = r * b % P;
+  return r;
+};
+const fromLE = (bytes) => bytes.reduceRight((n, b) => (n << 8n) | BigInt(b), 0n);
+const toLE = (n) => Uint8Array.from({ length: 32 }, (_, i) => Number((n >> BigInt(8 * i)) & 255n));
+const unhex = (s) => Uint8Array.from(s.match(/../g), (b) => parseInt(b, 16));
+
+// each field length-prefixed, so different fields never hash alike
+function fields(...xs) {
+  const bs = xs.map((x) => (typeof x === 'string' ? enc.encode(x) : x));
+  const out = new Uint8Array(bs.reduce((n, b) => n + 2 + b.length, 0));
+  let at = 0;
+  for (const b of bs) {
+    out.set([b.length >> 8, b.length & 255], at);
+    out.set(b, at + 2);
+    at += 2 + b.length;
+  }
+  return out;
+}
+
+// RFC 9380's Elligator 2 onto Curve25519, as the u-coordinate X25519 takes
+function elligator(r) {
+  const x1 = (P - A) * pow(1n + 2n * r * r, P - 2n) % P || P - A;
+  const gx = ((x1 + A) * x1 % P + 1n) * x1 % P;
+  return pow(gx, (P - 1n) / 2n) <= 1n ? x1 : (2n * P - x1 - A) % P;
+}
+
+// CPace (draft-irtf-cfrg-cpace) on X25519. Both sides turn the code and this connection's certificates
+// into the same curve point, then do a Diffie-Hellman exchange from it. Someone without the code, the
+// server included, gets one guess per connection, and seeing the exchange doesn't let them test more.
+async function cpace(code, pc, local) {
+  const h = new Uint8Array(await crypto.subtle.digest('SHA-512', fields('across-cpace', code, ...prints(pc, local))));
+  const g = toLE(elligator(fromLE(h.subarray(0, 32)) & ((1n << 255n) - 1n)));
+  const pair = await crypto.subtle.generateKey({ name: 'X25519' }, false, ['deriveBits']);
+  const times = async (u) => new Uint8Array(await crypto.subtle.deriveBits(
+    { name: 'X25519', public: await crypto.subtle.importKey('raw', u, { name: 'X25519' }, true, []) }, pair.privateKey, 256));
+  const mine = await times(g);
+  return {
+    y: hex(mine),
+    async key(y) {
+      const theirs = unhex(y), k = await times(theirs);
+      // a share of small order makes the result zero, a key anyone could compute
+      if (k.every((b) => !b)) throw new Error('bad share');
+      const [s, r] = local === 's' ? [mine, theirs] : [theirs, mine];
+      return new Uint8Array(await crypto.subtle.digest('SHA-512', fields('across-cpace-key', k, s, r)));
+    },
+  };
+}
+
+// One link's proofs. With a link's secret, each side sends its proof as soon as the link opens. With a
+// code, each side first sends its CPace share, then proves itself with the key the two shares agree on.
+function handshake(pass, pc, local) {
+  const other = local === 's' ? 'r' : 's';
+  const share = pass.code && cpace(pass.code, pc, local);
+  let key = pass.secret, answered = false;
+  const hi = async () => ({ t: 'hi', p: await proof(key, local, pc, local) });
+  return {
+    first: async () => (share ? { t: 'pake', y: (await share).y } : hi()),
+    // their share, answered with this side's proof; null for a share that wasn't expected or is bad
+    async pake(y) {
+      if (!share || answered) return null;
+      answered = true;
+      key = await (await share).key(y).catch(() => undefined);
+      return key && hi();
+    },
+    check: async (p) => key !== undefined && p === await proof(key, other, pc, local),
+  };
 }
 
 // ---- signaling: each browser long-polls its own mailbox on the server ----
@@ -594,6 +702,7 @@ function cleanName(name) {
 
 const CONTROLS = {
   hi: (m) => typeof m.p === 'string' && { t: 'hi', p: m.p },
+  pake: (m) => typeof m.y === 'string' && /^[0-9a-f]{64}$/.test(m.y) && { t: 'pake', y: m.y },
   meta: (m) => typeof m.name === 'string' && Number.isSafeInteger(m.size) && m.size >= 0 &&
     { t: 'meta', name: cleanName(m.name), size: m.size },
   start: (m) => ({ t: 'start', z: m.z === 1 }),
@@ -869,6 +978,22 @@ function pickFile() {
   $('.drop').after($('#msg'));
   privacyBox(() => {});
   $('#file').onchange = (e) => e.target.files[0] && send(e.target.files[0]);
+  // a typed code goes in the address, so a reload tries it again
+  const code = $('#code');
+  const go = () => {
+    const c = code.value.toLowerCase().replace(/[\s-]/g, '');
+    if (CODE.test(c)) return (location.hash = c);
+    $('#code-msg').textContent = c.length !== 6 ? 'A code has 6 letters.'
+      : 'Codes use only consonants, never vowels, digits or L. Check the letters.';
+  };
+  $('#enter').onsubmit = (e) => {
+    e.preventDefault();
+    go();
+  };
+  code.oninput = () => {
+    $('#code-msg').textContent = '';
+    if (CODE.test(code.value.toLowerCase().replace(/[\s-]/g, ''))) go();
+  };
   // dropping a file anywhere on the page works too, and the drop zone rises to meet it
   let over = 0;
   const lift = (on) => document.body.classList.toggle('dragging', on && !$('#pick').hidden);
@@ -929,16 +1054,22 @@ async function send(file) {
     $('#qr').prepend(code);
     $('#qr').hidden = false;
   }
-  say('Waiting for the other side to open the link…', 'wait');
+  say('Waiting for the other side…', 'wait');
 
   // receiver id -> { id, pc, state, offer, timer }
   // state: offering -> offered -> connecting -> verified, or closed.
   // blocked: hidden and the relay is unavailable, so nothing was created or sent.
   const peers = new Map();
   const unproven = () => [...peers.values()].filter((p) => p.state !== 'verified').length;
-  const sig = signaling(await roomOf(secret), 's', (m) => {
+  // A receiver arrives through the link's room or the code's. pass is what it must prove it knows.
+  const listen = (room, pass) => {
+    const sig = signaling(room, 's', (m) => onSignal(m, sig, pass));
+    return sig;
+  };
+  const onSignal = (m, sig, pass) => {
     const p = peers.get(m.from);
-    if (m.t === 'hello' && !p && unproven() < UNPROVEN) connect(m.from);
+    if (p && p.sig !== sig) return;
+    if (m.t === 'hello' && !p && unproven() < UNPROVEN) connect(m.from, sig, pass);
     else if (m.t === 'hello' && p?.state === 'offered') sig.post(m.from, p.offer);
     else if (m.t === 'answer' && p?.state === 'offered' && p.pc.signalingState === 'have-local-offer') {
       p.state = 'connecting';
@@ -952,7 +1083,45 @@ async function send(file) {
         p.lan = null;
       }
     }
-  });
+  };
+  listen(await roomOf(secret), { secret });
+  let missed = () => {};
+  offerCode();
+
+  // A code to type on the other device instead of the link, where this browser can do CPace.
+  async function offerCode() {
+    if (!(await X25519)) return;
+    const key = rid(20);
+    for (let tries = 0; tries < 5; tries++) {
+      const code = newCode();
+      const claim = (end) => fetch('api/code', { method: 'POST', keepalive: end, body: JSON.stringify({ name: code.slice(0, 2), key, end }) });
+      const r = await claim(false).catch(() => null);
+      if (r?.status === 409) continue; // another sender has these first letters
+      if (!r?.ok) return;
+      const sig = listen(await roomOf(key), { code });
+      const renew = setInterval(() => claim(false).catch(() => {}), CODE_RENEW_MS);
+      const end = () => {
+        clearInterval(renew);
+        sig.stop();
+        claim(true).catch(() => {});
+      };
+      addEventListener('pagehide', end);
+      let misses = 0;
+      missed = () => {
+        if (++misses < CODE_TRIES) return;
+        end();
+        $('#code-box').replaceChildren(Object.assign(document.createElement('p'), {
+          textContent: 'Someone typed a wrong code too many times, so it stopped working. Send the link instead.',
+        }));
+      };
+      $('#code-host').textContent = location.host;
+      $('#code-out').textContent = spaced(code);
+      $('#code-out').ariaLabel = code.toUpperCase().split('').join(' ');
+      $('#code-box').hidden = false;
+      $('label[for=link]').textContent = 'Or send them this link';
+      return;
+    }
+  }
 
   // Peers that haven't exchanged descriptions yet start over with the new choice. The rest
   // keep theirs: the other side already has those addresses.
@@ -960,7 +1129,7 @@ async function send(file) {
     for (const p of [...peers.values()]) {
       if (p.state === 'offering' || p.state === 'offered' || p.state === 'blocked') {
         drop(p);
-        connect(p.id);
+        connect(p.id, p.sig, p.pass);
       }
     }
     status();
@@ -970,7 +1139,7 @@ async function send(file) {
   // the relay is asked for a pass only once someone opens the link, since each network gets a few an hour
   function status() {
     const idle = ![...peers.values()].some((p) => p.state === 'verified');
-    say(idle ? 'Waiting for the other side to open the link…' : '', 'wait');
+    say(idle ? 'Waiting for the other side…' : '', 'wait');
   }
 
   function drop(p) {
@@ -981,8 +1150,14 @@ async function send(file) {
     if (peers.get(p.id) === p) peers.delete(p.id);
   }
 
-  async function connect(id) {
-    const p = { id, state: 'offering' };
+  // a wrong code counts once per receiver, however many of its links fail
+  function wrong(p) {
+    if (p.pass.code && p.state !== 'closed') missed();
+    drop(p);
+  }
+
+  async function connect(id, sig, pass) {
+    const p = { id, sig, pass, state: 'offering' };
     peers.set(id, p);
     p.timer = setTimeout(() => {
       if (p.local && p.state !== 'verified') say(RELAY_DOWN(), 'error');
@@ -1003,12 +1178,14 @@ async function send(file) {
       const ch = conn.createDataChannel('f');
       ch.binaryType = 'arraybuffer';
       ch.bufferedAmountLowThreshold = LOW;
-      ch.onopen = async () => ch.send(JSON.stringify({ t: 'hi', p: await proof(secret, 's', conn, 's') }));
+      let shake;
+      const hs = () => (shake ??= handshake(p.pass, conn, 's'));
+      ch.onopen = async () => ch.send(JSON.stringify(await hs().first()));
       let queue = Promise.resolve();
       ch.onmessage = (e) => {
-        const m = parseControl(e.data, ['hi', 'start', 'cancel', 'got']);
+        const m = parseControl(e.data, ['hi', 'pake', 'start', 'cancel', 'got']);
         if (!m) return drop(p);
-        queue = queue.then(() => onControl(m, conn, ch)).catch(() => drop(p));
+        queue = queue.then(() => onControl(m, conn, ch, hs())).catch(() => drop(p));
       };
       ch.onclose = () => {
         if (conn !== pc) {
@@ -1040,10 +1217,16 @@ async function send(file) {
       dc.send(JSON.stringify({ t: 'meta', name: file.name, size: file.size }));
     }
 
-    async function onControl(m, conn, ch) {
+    async function onControl(m, conn, ch, hs) {
       if (conn !== pc) {
         // nothing is accepted before the proof, and nothing more on a link that wasn't chosen
-        if (pc || m.t !== 'hi' || m.p !== await proof(secret, 'r', conn, 's')) return pc ? undefined : drop(p);
+        if (pc) return;
+        if (m.t === 'pake') {
+          const hi = await hs.pake(m.y);
+          if (!hi) return wrong(p);
+          return pc || ch.send(JSON.stringify(hi));
+        }
+        if (m.t !== 'hi' || !(await hs.check(m.p))) return pc ? undefined : wrong(p);
         if (conn === p.lan || !p.lan) return choose(conn, ch);
         setTimeout(() => choose(conn, ch), LAN_GRACE_MS);
       } else if (m.t === 'start' && !started) {
@@ -1238,7 +1421,8 @@ async function openSink(meta, onCancel) {
   };
 }
 
-async function receive(secret) {
+// pass: { secret } from a link, or { code } typed in
+async function receive(pass) {
   $('#recv').hidden = false;
   $('#r-card').append($('#msg'));
   // apps that open links in their own browser often drop downloads
@@ -1254,7 +1438,6 @@ async function receive(secret) {
   // hello -> answering -> answered -> verifying -> verified -> ready -> saving -> receiving -> done, or failed.
   // blocked: hidden and the relay is unavailable, so nothing was created or sent.
   // Until Download, changing the privacy box starts over from hello.
-  const room = await roomOf(secret);
   // pc is the main connection and lan the local one. Both are links until the sender picks one by
   // sending meta on it; dc is then that link's channel. links holds the channels open until then.
   let phase, config, sig, hello, pc, lan, dc, links, offer, answer, meta, sink, xfer, timer, giveUp, got = 0, hellos = 0, attempts = 0;
@@ -1265,8 +1448,30 @@ async function receive(secret) {
     say(config === LAN ? `Looking for the sender. ${relayNote()} Until then, hidden mode works only on the same Wi-Fi; ` +
       'turning off Hide my IP address connects from anywhere.'
       : 'Looking for the sender. Their page must still be open, and on screen if they are on a phone.', 'wait'), 6000);
+  const room = pass.secret ? await roomOf(pass.secret) : await roomOfCode();
+  if (!room) return;
   privacyBox(() => !sink && phase !== 'saving' && start());
   start();
+
+  // the room the code's first letters lead to, or null after saying why there isn't one
+  async function roomOfCode() {
+    if (!(await X25519)) return wrongCode('This browser is too old for codes. Ask the sender for the link, or update your browser.');
+    const r = await fetch(`api/code?name=${pass.code.slice(0, 2)}`).catch(() => null);
+    if (r?.status === 404) return wrongCode('No file is waiting under that code. Check it with the sender. Their page must still be open.');
+    const room = r?.ok && (await r.json().catch(() => null))?.room;
+    if (typeof room === 'string' && /^[0-9a-f]{32}$/.test(room)) return room;
+    fail("Couldn't reach Across. Check your connection, then reload.");
+  }
+
+  function wrongCode(text) {
+    reject(text);
+    $('#r-name').textContent = "That code didn't work";
+    $('#r-size').textContent = spaced(pass.code);
+    const again = Object.assign(document.createElement('a'), { href: './', textContent: 'Type it again' });
+    $('#msg').append(' ', again);
+    again.focus();
+    return null;
+  }
 
   // Each attempt has a fresh receiver id, so the sender sees a new peer, not a changed one.
   async function start() {
@@ -1372,7 +1577,7 @@ async function receive(secret) {
   }
 
   function setup(channel, conn) {
-    const link = { conn, channel, proven: false }, offered = links;
+    const link = { conn, channel, proven: false, hs: handshake(pass, conn, 'r') }, offered = links;
     links.add(link);
     channel.binaryType = 'arraybuffer';
     // until the sender picks a link, each of this offer's links counts; then only the picked one
@@ -1382,14 +1587,14 @@ async function receive(secret) {
       if (phase === 'answered') phase = 'verifying';
       clearInterval(hello);
       sig.stop(); // connected; the server is out of the picture
-      const p = await proof(secret, 'r', conn, 'r');
-      if (current()) channel.send(JSON.stringify({ t: 'hi', p }));
+      const first = await link.hs.first();
+      if (current()) channel.send(JSON.stringify(first));
     };
     let queue = Promise.resolve();
     channel.onmessage = (e) => {
       if (!current()) return;
       if (typeof e.data !== 'string') return channel === dc && onBytes(e.data);
-      const m = parseControl(e.data, ['hi', 'meta', 'done', 'z']);
+      const m = parseControl(e.data, ['hi', 'pake', 'meta', 'done', 'z']);
       // a z header must apply to the very next bytes, so it can't wait in the queue
       if (m?.t === 'z') return onZip(m);
       queue = queue.then(() => current() && onControl(m, link)).catch((err) => reject(`Could not save: ${err.message}`));
@@ -1461,10 +1666,17 @@ async function receive(secret) {
 
   async function onControl(m, link) {
     if (phase === 'failed' || phase === 'done') return;
-    if (m?.t === 'hi' && !dc && !link.proven && (phase === 'verifying' || phase === 'verified')) {
-      const want = await proof(secret, 's', link.conn, 'r');
+    const checking = !dc && !link.proven && (phase === 'verifying' || phase === 'verified');
+    if (m?.t === 'pake' && checking) {
+      const hi = await link.hs.pake(m.y);
+      if (!links?.has(link)) return; // started over meanwhile
+      if (!hi) return wrongCode("That code doesn't match. Check it with the sender and try again.");
+      link.channel.send(JSON.stringify(hi));
+    } else if (m?.t === 'hi' && checking) {
+      const ok = await link.hs.check(m.p);
       if (!links?.has(link)) return; // started over while hashing
-      if (m.p !== want) return reject('Could not verify the sender. The connection may have been tampered with.');
+      if (!ok && pass.code) return wrongCode("That code doesn't match. Check it with the sender and try again.");
+      if (!ok) return reject('Could not verify the sender. The connection may have been tampered with.');
       link.proven = true;
       phase = 'verified';
     } else if (m?.t === 'meta' && phase === 'verified' && !dc && link.proven) {
@@ -1574,7 +1786,8 @@ addEventListener('pageshow', (e) => e.persisted && location.reload());
 const hash = location.hash.slice(1);
 const secret = hash.toLowerCase().replace(/[^a-z0-9]+$/, '');
 if (!window.isSecureContext) say('This page needs HTTPS.');
-else if (/^[a-z0-9]{20}$/.test(secret)) receive(secret);
+else if (/^[a-z0-9]{20}$/.test(secret)) receive({ secret });
+else if (CODE.test(secret)) receive({ code: secret });
 else if (hash) broken();
 else pickFile();
 
