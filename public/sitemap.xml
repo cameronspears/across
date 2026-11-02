@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://acrossfile.com/</loc></url>
-  <url><loc>https://acrossfile.com/how</loc></url>
-  <url><loc>https://acrossfile.com/privacy</loc></url>
+  <url><loc>https://acrossfile.com/</loc><lastmod>2026-11-02</lastmod></url>
+  <url><loc>https://acrossfile.com/send-large-files</loc><lastmod>2026-11-02</lastmod></url>
+  <url><loc>https://acrossfile.com/phone-to-computer</loc><lastmod>2026-11-02</lastmod></url>
+  <url><loc>https://acrossfile.com/wetransfer-alternative</loc><lastmod>2026-11-02</lastmod></url>
+  <url><loc>https://acrossfile.com/faq</loc><lastmod>2026-11-02</lastmod></url>
+  <url><loc>https://acrossfile.com/how</loc><lastmod>2026-11-02</lastmod></url>
+  <url><loc>https://acrossfile.com/privacy</loc><lastmod>2026-11-02</lastmod></url>
 </urlset>

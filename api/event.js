@@ -47,7 +47,7 @@ const EVENTS = {
   relay_unavailable: { role },
   js_error: { msg: re(/^[^\n]{1,160}$/), line: n(1e6) },
 };
-const COMMON = { s: re(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/), page: one('/', '/how', '/privacy') };
+const COMMON = { s: re(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/), page: one('/', '/how', '/privacy', '/faq', '/send-large-files', '/phone-to-computer', '/wetransfer-alternative') };
 
 // {event, props} with only listed, well-formed properties, or null
 export function clean(body) {
