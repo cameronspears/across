@@ -55,7 +55,9 @@ Three parties see more than the other person does:
 ## Files
 
 - `public/index.html` is the whole app: markup, style, and script.
-- `public/how.html` explains to users how it works and who sees what. It has no script. The CSP allows the inline blocks of both pages.
+- `public/how.html` explains to users how it works and who sees what. `public/privacy.html` lists what the usage stats count.
+- `public/send-large-files.html`, `phone-to-computer.html`, `wetransfer-alternative.html` and `faq.html` are guides for search. They reuse `how.html`'s style and script blocks byte for byte, so they add no CSP hashes. `docs/seo.md` has the target searches and launch drafts.
+- The CSP allows the inline blocks of every `public/*.html`; `vercel.ts` and `dev.mjs` both read the folder.
 - `public/sw.js` is a service worker that turns the incoming bytes into a normal browser download.
 - `api/code.js` holds a code's first two letters for the sender's room, with `lib/codes.js`.
 - `api/signal.js` passes handshake messages. It validates every message (at most 8 KB) and stores it with `lib/mailbox.js`. Each client (an IPv4 address or IPv6 /64) gets `SIGNAL_POSTS_PER_MIN` posts and `SIGNAL_POLLS_PER_MIN` polls a minute, then `429` with `Retry-After`, so one address can't fill Redis or hold its connections. `lib/limit.js` keeps these counters, and the relay's, under a salted hash of the address.

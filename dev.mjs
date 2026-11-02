@@ -1,6 +1,6 @@
 // Local stand-in for Vercel. Same page, same headers, same /api handlers.
 import http from 'node:http';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import { headerRules } from './lib/headers.js';
 import * as signal from './api/signal.js';
@@ -11,13 +11,12 @@ import * as event from './api/event.js';
 
 const PORT = Number(process.env.PORT) || 8080;
 const read = (file) => readFileSync(new URL(file, import.meta.url));
-const html = read('./public/index.html');
-const how = read('./public/how.html');
-const privacy = read('./public/privacy.html');
+// every public/*.html, at its clean URL like Vercel's cleanUrls (index.html at /)
+const html = Object.fromEntries(readdirSync(new URL('./public', import.meta.url)).filter((f) => f.endsWith('.html'))
+  .map((f) => [f === 'index.html' ? '/' : `/${f.slice(0, -5)}`, read(`./public/${f}`)]));
 const pages = {
-  '/': { type: 'text/html; charset=utf-8', body: html },
-  '/how': { type: 'text/html; charset=utf-8', body: how },
-  '/privacy': { type: 'text/html; charset=utf-8', body: privacy },
+  ...Object.fromEntries(Object.entries(html).map(([path, body]) => [path, { type: 'text/html; charset=utf-8', body }])),
+  '/favicon.ico': { type: 'image/x-icon', body: read('./public/favicon.ico') },
   '/sw.js': { type: 'text/javascript; charset=utf-8', body: read('./public/sw.js') },
   '/logo.svg': { type: 'image/svg+xml', body: read('./public/logo.svg') },
   '/apple-touch-icon.png': { type: 'image/png', body: read('./public/apple-touch-icon.png') },
@@ -29,7 +28,7 @@ const pages = {
   '/sitemap.xml': { type: 'application/xml', body: read('./public/sitemap.xml') },
 };
 const functions = { '/api/signal': signal, '/api/ice': ice, '/api/guard': guard, '/api/code': code, '/api/event': event };
-const rules = headerRules(html.toString('utf8'), how.toString('utf8'), privacy.toString('utf8')).map((r) => ({ ...r, match: new RegExp(`^${r.source}$`) }));
+const rules = headerRules(...Object.values(html).map((b) => b.toString('utf8'))).map((r) => ({ ...r, match: new RegExp(`^${r.source}$`) }));
 const headersFor = (path) => rules.filter((r) => r.match.test(path)).flatMap((r) => r.headers.map((h) => [h.key, h.value]));
 
 async function api(fn, path, req, res) {
