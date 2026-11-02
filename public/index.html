@@ -31,7 +31,6 @@
 <style>
 :root{
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
-  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   --r:16px;--r-in:10px;--r-ctl:10px;--r-sm:8px;
   --s1:4px;--s2:8px;--s3:16px;--s4:24px;--s5:48px;--s6:80px;
   --spring:linear(0,.013 .6%,.05 1.2%,.2 2.5%,.43 4.1%,.72 6.3%,.94 8.6%,1.06 10.7%,1.11 12.7%,1.12 14.3%,1.1 16.4%,1.05 19.6%,1.01 23%,.99 27%,.995 34%,1.002 45%,1);
@@ -175,18 +174,18 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 .sendgrid{display:grid;grid-template-columns:1fr auto;gap:var(--s4);margin-top:var(--s4);padding-top:var(--s4);border-top:1px solid var(--rule)}
 .sendgrid>div{min-width:0}
 .label{display:block;color:var(--muted);font-size:14px;margin-bottom:var(--s2)}
-.code{display:block;margin:0 0 var(--s4);font:600 32px/1.1 var(--mono);letter-spacing:.14em;color:var(--strong)}
+.code{display:block;margin:0 0 var(--s4);font:600 32px/1.1 var(--font);letter-spacing:.14em;color:var(--strong)}
 #code-box p{margin:0 0 var(--s4);color:var(--muted);font-size:14px;text-wrap:pretty}
 .enter{margin-top:var(--s4)}
 .enter>div{display:flex;flex-wrap:wrap;gap:var(--s2)}
 #code{width:8.5em;min-width:0;height:42px;padding:0 12px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--strong);
-  font:600 17px var(--mono);letter-spacing:.14em;text-transform:uppercase;transition:background-color .2s var(--out)}
+  font:600 17px var(--font);letter-spacing:.14em;text-transform:uppercase;transition:background-color .2s var(--out)}
 #code::placeholder{color:var(--muted);opacity:.45}
 @media (hover:hover) and (pointer:fine){#code:hover{background:var(--fill-hover)}}
 #code-msg{display:block;margin-top:var(--s2);color:var(--bad);font-size:14px}
 #code-msg:empty{display:none}
 .linkrow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s2)}
-#link{display:block;width:100%;min-width:0;height:42px;padding:0 12px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--strong);font:500 15px var(--mono);
+#link{display:block;width:100%;min-width:0;height:42px;padding:0 12px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--strong);font:500 15px var(--font);
   text-overflow:ellipsis;transition:background-color .2s var(--out)}
 @media (hover:hover) and (pointer:fine){#link:hover{background:var(--fill-hover)}}
 #link:focus-visible{outline-offset:2px}
@@ -214,7 +213,7 @@ h1{margin:0;color:var(--strong);font-weight:300;font-size:clamp(34px,6.4vw,52px)
 .xfer{margin:0;display:grid;grid-template-columns:1fr auto;gap:var(--s2) var(--s3);align-items:baseline}
 .xfer+.xfer{margin-top:var(--s3)}
 .xfer b{font-weight:500;font-size:15px;min-width:0;text-wrap:pretty}
-.xfer>span{color:var(--muted);font:500 13px var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:pre}
+.xfer>span{color:var(--muted);font:500 13px var(--font);font-variant-numeric:tabular-nums;text-align:right;white-space:pre}
 .beam{grid-column:1/-1;display:flex;align-items:center;gap:6px;height:12px}
 .beam::before,.beam::after{content:"";flex:none;width:12px;height:12px;border-radius:50%;background:var(--strong);transition:background-color .3s var(--out),transform .5s var(--spring)}
 .beam::after{background:transparent;box-shadow:inset 0 0 0 2px var(--muted)}
@@ -381,6 +380,7 @@ const RELAY_RETRY_MS = 30_000;
 const HELLO_MS = 8000, HELLOS = 225; // 30 minutes
 const PROVE_MS = 20000, UNPROVEN = 8;
 const LOCAL_MS = 15000; // a local-only connection that hasn't proven itself by then isn't on the same network
+const STUCK_MS = 20000; // a receiver not connected by then reports where it stopped
 const RID = /^[a-z0-9]{16}$/;
 const BIG = 1e9; // past this, a browser that holds downloads in memory may run out
 
@@ -674,6 +674,22 @@ async function routeOf(pc) {
   } catch {
     return 'unknown';
   }
+}
+
+// A connection still not up after STUCK_MS reports where it stopped, once per page. stage is how far the
+// handshake got (a receiver still at hello never heard from the sender); ice is how far each link got;
+// mine and theirs are the kinds of address each side offered on the main link.
+let stuckSent = false;
+const kindsOf = (desc) => [...new Set((desc?.sdp ?? '').split('\r\n')
+  .map((l) => / typ (host|srflx|prflx|relay)\b/.exec(l)?.[1]).filter(Boolean))].sort().join(',');
+function stuck(role, via, stage, relay, pc, lan) {
+  if (stuckSent) return;
+  stuckSent = true;
+  track('connect_stuck', {
+    role, via, stage, hide_ip: hide, ...(relay !== undefined && { relay }),
+    ...(pc && { ice: pc.iceConnectionState, mine: kindsOf(pc.localDescription), theirs: kindsOf(pc.remoteDescription) }),
+    ...(lan && { ice_lan: lan.iceConnectionState }),
+  });
 }
 
 // what went wrong, from the words the page showed
@@ -1292,6 +1308,7 @@ async function send(file, how) {
     let route = 'unknown', began, reported = false;
     const end = (e, props) => reported || ((reported = true), track(e, { role: 'sender', ...props }));
     p.timer = setTimeout(() => {
+      if (p.state !== 'verified') stuck('sender', via, p.state, p.local === undefined ? undefined : !p.local, p.pc, p.lan);
       if (p.local && p.state !== 'verified') {
         say(RELAY_DOWN(), 'error');
         track('relay_unavailable', { role: 'sender' });
@@ -1595,6 +1612,8 @@ async function receive(pass) {
     say(config === LAN ? `Looking for the sender. ${relayNote()} Until then, hidden mode works only on the same Wi-Fi; ` +
       'turning off Hide my IP address connects from anywhere.'
       : 'Waiting for the sender to come back to Across. If they’re on a phone, ask them to switch back to it. It connects as soon as they do.', 'wait'), 6000);
+  setTimeout(() => !meta && phase !== 'failed' && phase !== 'blocked' &&
+    stuck('receiver', via, phase, config && config !== LAN, pc, lan), STUCK_MS);
   const room = pass.secret ? await roomOf(pass.secret) : await roomOfCode();
   if (!room) return;
   privacyBox(() => !sink && phase !== 'saving' && start());

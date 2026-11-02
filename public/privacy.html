@@ -24,7 +24,6 @@
 <style>
 :root{
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
-  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   --r:16px;--s1:4px;--s2:8px;--s3:16px;--s4:24px;--s5:48px;--s6:80px;
   color-scheme:light;
   --bg:oklch(98.6% 0 0);
@@ -62,7 +61,7 @@ tr:last-child th,tr:last-child td{border-bottom:0}
 thead th{color:var(--muted);font-weight:500;font-size:13px}
 tbody th{color:var(--strong);font-weight:600;width:28%}
 .no{color:var(--muted)}
-code,pre{font-family:var(--mono);font-size:14px}
+code,pre{font:inherit}
 code{background:var(--fill);padding:1px 5px;border-radius:5px}
 pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--fill);overflow-x:auto;white-space:pre}
 .foot{padding-block:var(--s4) calc(var(--s4) + env(safe-area-inset-bottom));color:var(--muted);font-size:13px;border-top:1px solid var(--rule)}
@@ -103,6 +102,7 @@ pre{margin:var(--s2) 0 0;padding:var(--s3);border-radius:12px;background:var(--f
 <tr><th scope="row">You open a page</th><td>Which page; whether you came from a link, a code or the home page; the name of the website that sent you, if any, and campaign tags like <code>utm_source</code>; your language; your window width</td></tr>
 <tr><th scope="row">You pick a file</th><td>Its size, rounded to two figures (3.4 GB, not 3,412,876,544 bytes); its kind (image, video, document…) and extension if it is a common one like <code>pdf</code>; whether Hide my IP is on</td></tr>
 <tr><th scope="row">The two browsers connect</th><td>Sender or receiver; link or code; whether it went over the same network, directly, or through the relay; how long connecting took; whether Hide my IP is on</td></tr>
+<tr><th scope="row">The two browsers still haven’t connected after 20 seconds</th><td>Sender or receiver; link or code; how far connecting got; whether Hide my IP is on and the relay was available; the kinds of address each side offered (like “relay” or “same network”), never the addresses themselves</td></tr>
 <tr><th scope="row">A transfer starts, finishes or fails</th><td>Size (rounded), kind and common extension; link or code, and the route it took; how long it took and how fast it went; whether compression was used; how the file was saved; if it failed, at what step, how much had arrived (rounded) and a short reason like “disconnected”</td></tr>
 <tr><th scope="row">Other moments</th><td>Trying to send several files or a folder at once, showing a code, typing one and whether it was well formed, copying or sharing the link (not the link itself), a wrong or expired code (not the code), the relay being unavailable, and the text of a page error so we can fix it</td></tr>
 </tbody>
