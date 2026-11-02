@@ -1,10 +1,10 @@
 # Getting Across found
 
-Checked 2026-11-02. A `site:acrossfile.com` search returned nothing, so Google has not indexed the site yet. That, not ranking, is the first problem: no page can rank until it is indexed.
+2026-11-02: Search Console (domain property, verified by a TXT record in Vercel DNS) shows the home page already indexed. An earlier `site:` check through a non-Google search tool wrongly suggested it wasn't. The sitemap (7 pages) was submitted the same day. The guides are new, so they still need crawling, and traffic needs links from other sites.
 
 ## Do first (needs the owner's sign-in)
 
-1. Google Search Console: add the domain `acrossfile.com` (DNS TXT record at the registrar), then **Sitemaps** → submit `https://acrossfile.com/sitemap.xml`. Then **URL inspection** → **Request indexing** for `/` and each guide.
+1. Done 2026-11-02: domain property verified, sitemap submitted. **Request indexing** failed right after verification (common for new properties); retry it in a day for `/` and each guide via **URL inspection**. Keep the `google-site-verification` TXT record in Vercel DNS.
 2. Bing Webmaster Tools: **Import from Google Search Console** (one click once step 1 is done). Bing also feeds DuckDuckGo, Yahoo and ChatGPT search.
 3. After a week, check **Pages** in Search Console for anything "Discovered – not indexed" and **Performance** for the queries you show up for.
 
