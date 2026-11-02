@@ -30,6 +30,8 @@ const ext = re(/^[a-z0-9]{1,8}$/);
 const bytes = rounded(1e15);
 const ms = (v) => (n(1e9)(v) === undefined ? undefined : Math.round(v));
 const slug = re(/^[\w.-]{1,40}$/);
+const ice = one('new', 'checking', 'connected', 'completed', 'failed', 'disconnected', 'closed');
+const kinds = re(/^(?:(?:host|srflx|prflx|relay)(?:,|$)){0,4}$/);
 
 const EVENTS = {
   $pageview: { entry: one('home', 'link', 'code', 'bad'), ref: re(/^[a-z0-9.-]{1,80}$/), utm_source: slug, utm_medium: slug, utm_campaign: slug, lang: re(/^[a-z]{2,3}(-[A-Za-z]{2,4})?$/), vw: rounded(10000) },
@@ -45,6 +47,7 @@ const EVENTS = {
   transfer_failed: { role, stage: re(/^[a-z]{1,12}$/), reason: re(/^[a-z_]{1,24}$/), at: bytes, size: bytes },
   code_rejected: { reason: one('wrong', 'unknown', 'too_many', 'old_browser') },
   relay_unavailable: { role },
+  connect_stuck: { role, via, stage: re(/^[a-z]{1,12}$/), hide_ip: b, relay: b, ice, ice_lan: ice, mine: kinds, theirs: kinds },
   js_error: { msg: re(/^[^\n]{1,160}$/), line: n(1e6) },
 };
 const COMMON = { s: re(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/), page: one('/', '/how', '/privacy', '/faq', '/send-large-files', '/phone-to-computer', '/wetransfer-alternative') };

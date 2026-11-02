@@ -38,6 +38,8 @@ check('same visitor, same day, same hash', (await post(ev('link_shared'), { 'x-r
   === (await post(ev('link_shared'), { 'x-real-ip': '198.51.100.7' })).sent[0].body.distinct_id);
 const pv = (await post(ev('$pageview', { entry: 'link', ref: 'news.ycombinator.com', utm_source: 'hn', lang: 'en-NZ', vw: 1440 }))).sent[0]?.body.properties;
 check('page view has the url without any # part', pv?.$current_url === 'https://acrossfile.com/' && pv.$referring_domain === 'news.ycombinator.com');
+const st = (await post(ev('connect_stuck', { role: 'receiver', via: 'code', stage: 'answered', hide_ip: true, relay: true, ice: 'checking', ice_lan: 'failed', mine: 'host,relay', theirs: '' }))).sent[0]?.body.properties;
+check('a stuck connection passes its stage and address kinds', st?.stage === 'answered' && st.mine === 'host,relay' && st.theirs === '' && st.ice_lan === 'failed');
 
 // refused: anything that could carry a name, link, code or address
 const bad = {
@@ -52,6 +54,8 @@ const bad = {
   'no session id': { e: 'link_shared', p: { page: '/' } },
   'bad page': ev('link_shared', { page: '/#secret' }),
   'array props': { e: 'link_shared', p: [] },
+  'an address in candidate kinds': ev('connect_stuck', { role: 'sender', mine: '203.0.113.7' }),
+  'unknown ice state': ev('connect_stuck', { role: 'sender', ice: 'stuck' }),
   'multi-line error': ev('js_error', { msg: 'a\nb', line: 1 }),
 };
 for (const [name, body] of Object.entries(bad)) {

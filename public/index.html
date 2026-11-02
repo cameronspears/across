@@ -381,6 +381,7 @@ const RELAY_RETRY_MS = 30_000;
 const HELLO_MS = 8000, HELLOS = 225; // 30 minutes
 const PROVE_MS = 20000, UNPROVEN = 8;
 const LOCAL_MS = 15000; // a local-only connection that hasn't proven itself by then isn't on the same network
+const STUCK_MS = 20000; // a receiver not connected by then reports where it stopped
 const RID = /^[a-z0-9]{16}$/;
 const BIG = 1e9; // past this, a browser that holds downloads in memory may run out
 
@@ -674,6 +675,22 @@ async function routeOf(pc) {
   } catch {
     return 'unknown';
   }
+}
+
+// A connection still not up after STUCK_MS reports where it stopped, once per page. stage is how far the
+// handshake got (a receiver still at hello never heard from the sender); ice is how far each link got;
+// mine and theirs are the kinds of address each side offered on the main link.
+let stuckSent = false;
+const kindsOf = (desc) => [...new Set((desc?.sdp ?? '').split('\r\n')
+  .map((l) => / typ (host|srflx|prflx|relay)\b/.exec(l)?.[1]).filter(Boolean))].sort().join(',');
+function stuck(role, via, stage, relay, pc, lan) {
+  if (stuckSent) return;
+  stuckSent = true;
+  track('connect_stuck', {
+    role, via, stage, hide_ip: hide, ...(relay !== undefined && { relay }),
+    ...(pc && { ice: pc.iceConnectionState, mine: kindsOf(pc.localDescription), theirs: kindsOf(pc.remoteDescription) }),
+    ...(lan && { ice_lan: lan.iceConnectionState }),
+  });
 }
 
 // what went wrong, from the words the page showed
@@ -1292,6 +1309,7 @@ async function send(file, how) {
     let route = 'unknown', began, reported = false;
     const end = (e, props) => reported || ((reported = true), track(e, { role: 'sender', ...props }));
     p.timer = setTimeout(() => {
+      if (p.state !== 'verified') stuck('sender', via, p.state, p.local === undefined ? undefined : !p.local, p.pc, p.lan);
       if (p.local && p.state !== 'verified') {
         say(RELAY_DOWN(), 'error');
         track('relay_unavailable', { role: 'sender' });
@@ -1595,6 +1613,8 @@ async function receive(pass) {
     say(config === LAN ? `Looking for the sender. ${relayNote()} Until then, hidden mode works only on the same Wi-Fi; ` +
       'turning off Hide my IP address connects from anywhere.'
       : 'Waiting for the sender to come back to Across. If they’re on a phone, ask them to switch back to it. It connects as soon as they do.', 'wait'), 6000);
+  setTimeout(() => !meta && phase !== 'failed' && phase !== 'blocked' &&
+    stuck('receiver', via, phase, config && config !== LAN, pc, lan), STUCK_MS);
   const room = pass.secret ? await roomOf(pass.secret) : await roomOfCode();
   if (!room) return;
   privacyBox(() => !sink && phase !== 'saving' && start());
